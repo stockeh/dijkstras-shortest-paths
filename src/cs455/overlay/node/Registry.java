@@ -1,19 +1,22 @@
 package cs455.overlay.node;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import cs455.overlay.transport.TCPReceiverThread;
+import cs455.overlay.util.Logger;
+import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.Protocol;
 
 /**
  * Maintains information about the registered messaging nodes.
  *
- * @author Jason Stock
+ * @author stock
  *
  */
-public class Registry {
+public class Registry implements Node {
+
+  private final static Logger LOG = new Logger(true);
 
   /**
    * Stands-up the registry.
@@ -22,14 +25,15 @@ public class Registry {
    */
   public static void main(String[] args) {
     if (args.length < 1) {
-      System.err.println("USAGE: java cs455.overlay.node.Registry portnum");
+      LOG.error("USAGE: java cs455.overlay.node.Registry portnum");
       return;
     }
+    LOG.info("Starting up");
     Registry registry = new Registry();
     try (ServerSocket serverSocket = new ServerSocket(Integer.valueOf(args[0]))) {
       registry.connectMessagingNode(serverSocket);
     } catch (IOException e) {
-      System.err.println("ERROR: ServerSocket Exception:" + e.getMessage());
+      LOG.error(e.getMessage());
       e.printStackTrace();
     }
   }
@@ -40,26 +44,31 @@ public class Registry {
    * @param serverSocket
    */
   private void connectMessagingNode(ServerSocket serverSocket) {
+    
     while (true) {
-      try (Socket socket = serverSocket.accept();
-          DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-          DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());) {
+      try {
+        Socket socket = serverSocket.accept();
+        (new Thread(new TCPReceiverThread(socket))).start();
         
-        Integer msgLength = inputStream.readInt();
-        byte[] ipAddress = new byte[msgLength];
-        inputStream.readFully(ipAddress, 0, msgLength);
         String remoteHost = socket.getRemoteSocketAddress().toString().substring(1);
+        LOG.info("InetAddress: " + remoteHost);
         
-        System.out.println("IP message: " + new String(ipAddress, StandardCharsets.UTF_8));
-        System.out.println("InetAddress: " + remoteHost);
-        
-        byte[] status;
-
       } catch (IOException e) {
-        System.err.println("ERROR: Socket Exception:" + e.getMessage());
+        LOG.error(e.getMessage());
         e.printStackTrace();
       }
     }
+  }
+
+  @Override
+  public void onEvent(Event event) {
+    switch (event.getType())
+    {
+      case Protocol.REGISTER_REQUEST:
+        LOG.info("SOMETHING: " + event.getType());
+        break;
+    }
+    
   }
 
 }

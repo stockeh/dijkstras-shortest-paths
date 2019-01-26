@@ -1,5 +1,9 @@
 package cs455.overlay.wireformats;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import cs455.overlay.util.Logger;
+
 /**
  * Singleton class in charge of creating objects,
  * i.e., messaging types, from reading the first
@@ -10,6 +14,8 @@ package cs455.overlay.wireformats;
  */
 public class EventFactory {
 
+  private final static Logger LOG = new Logger(true);
+  
   private static EventFactory instance = null;
 
   /**
@@ -29,5 +35,22 @@ public class EventFactory {
       instance = new EventFactory();
     }
     return instance;
+  }
+  
+  /**
+   * 
+   * @param message
+   * @return
+   * @throws IOException 
+   */
+  public Event createEvent(byte[] marshalledBytes) throws IOException {
+    
+    switch (ByteBuffer.wrap(marshalledBytes).getInt())
+    {
+      case Protocol.REGISTER_REQUEST:
+        return new Register(marshalledBytes);
+    }
+    LOG.error("ERROR: Could not create Event");
+    return null;
   }
 }

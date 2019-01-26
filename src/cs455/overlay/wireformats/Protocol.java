@@ -7,7 +7,7 @@ package cs455.overlay.wireformats;
  * @author Jason Stock
  *
  */
-interface Protocol {
+public interface Protocol {
   
   final int REGISTER_REQUEST = 0;
   

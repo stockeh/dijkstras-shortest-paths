@@ -27,7 +27,7 @@ public class Register implements Event {
   private int port;
 
   /**
-   * Default constructor - Unmarshall the <code>byte[]</code> to the
+   * Constructor - Unmarshall the <code>byte[]</code> to the
    * respective class elements.
    * 
    * @param marshalledBytes is the byte array of the class.
@@ -39,17 +39,32 @@ public class Register implements Event {
     
     this.type = din.readInt();
     
-    byte[] ipBytes = new byte[din.readInt()];
+    int len = din.readInt();
+    byte[] ipBytes = new byte[len];
     din.readFully(ipBytes);
-    
-    this.ipAddress = ipBytes.toString();
-    
+  
+    this.ipAddress = new String(ipBytes);
+
     this.port = din.readInt();
     
     inputStream.close();
     din.close();
   }
   
+  /**
+   * Default constructor - Create a new register message
+   * object.
+   * 
+   * @param type
+   * @param ipAddress
+   * @param port
+   */
+  public Register(int type, String ipAddress, int port) {
+    this.type = type;
+    this.ipAddress = ipAddress;
+    this.port = port;
+    System.out.println("HERE: " + this.toString());
+  }
   /**
    * {@inheritDoc}
    */
@@ -81,6 +96,15 @@ public class Register implements Event {
     outputStream.close();
     dout.close();
     return marshalledBytes;
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString() {
+    return "type: " + Integer.toString(this.type) + " " +
+        this.ipAddress + ":" + Integer.toString(this.port);
   }
   
 }

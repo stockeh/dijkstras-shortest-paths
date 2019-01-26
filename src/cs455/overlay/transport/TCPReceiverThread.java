@@ -4,9 +4,14 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import cs455.overlay.util.Logger;
+import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.EventFactory;
 
 public class TCPReceiverThread implements Runnable {
 
+  private final static Logger LOG = new Logger(true);
+  
   private Socket socket;
   
   private DataInputStream din;
@@ -32,20 +37,23 @@ public class TCPReceiverThread implements Runnable {
     while (socket != null) {
       try {
         len = din.readInt();
-        
         byte[] data = new byte[len];
         din.readFully(data, 0, len);
         
+        EventFactory eventFactory = EventFactory.getInstance();
+        Event event = eventFactory.createEvent(data);
+        LOG.info(event.toString());
+ 
       } catch (SocketException e) {
-        System.err.println("ERROR: " + e.getMessage());
+        LOG.error(e.getMessage());
         e.printStackTrace();
         break;
+        
       } catch (IOException e) {
-        System.err.println("ERROR: " + e.getMessage());
+        LOG.error(e.getMessage());
         e.printStackTrace();
         break;
       }
     }
   }
-
 }

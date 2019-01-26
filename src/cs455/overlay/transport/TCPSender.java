@@ -39,7 +39,7 @@ public class TCPSender {
    * @param data
    * @throws IOException
    */
-  public void sendData(byte[] data) throws IOException {
+  public void sendData(final byte[] data) throws IOException {
     int len = data.length;
     dout.writeInt(len);
     dout.write(data, 0, len);

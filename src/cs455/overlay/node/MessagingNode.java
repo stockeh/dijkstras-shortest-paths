@@ -1,11 +1,14 @@
 package cs455.overlay.node;
 
-import java.net.Socket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import cs455.overlay.transport.TCPSender;
+import cs455.overlay.util.Logger;
+import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.Protocol;
+import cs455.overlay.wireformats.Register;
 
 /**
  * Messaging nodes initiate and accept both communications and messages within the system.
@@ -13,8 +16,10 @@ import java.io.IOException;
  * @author Jason Stock
  *
  */
-public class MessagingNode {
+public class MessagingNode implements Node, Protocol {
 
+  private final static Logger LOG = new Logger(true);
+  
   /**
    * Diver for each messaging node.
    *
@@ -22,8 +27,7 @@ public class MessagingNode {
    */
   public static void main(String[] args) {
     if (args.length < 2 && (Integer.parseInt(args[1]) < 1024 || Integer.parseInt(args[1]) > 65535)) {
-      System.err
-          .println("USAGE: java cs455.overlay.node.MessagingNode registry-host registry-port");
+      LOG.error("USAGE: java cs455.overlay.node.MessagingNode registry-host registry-port");
       return;
     }
     // TODO: Initialize using TCPServerSocket to accept incoming TCP communications
@@ -42,24 +46,29 @@ public class MessagingNode {
     try {
       localhost = InetAddress.getLocalHost();
     } catch (UnknownHostException e) {
-      System.err.println(
+      LOG.error(
           "ERROR: Local host name " + "could not be resolved into an address" + e.getMessage());
       e.printStackTrace();
       return;
     }
-    try (Socket socket = new Socket(host, port);
-        DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-        DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());) {
+    try {
+      Socket socket = new Socket(host, port);
+      TCPSender sender = new TCPSender(socket);
+      
       String ipAddress = InetAddress.getLocalHost().getHostAddress();
-
-      byte[] message = ipAddress.getBytes();
-      Integer msgLength = message.length;
-
-      outputStream.writeInt(msgLength);
-      outputStream.write(message, 0, msgLength);
+      Register register = new Register(Protocol.REGISTER_REQUEST, ipAddress, 5000);
+      sender.sendData(register.getBytes());
+      socket.close();
+      
     } catch (IOException e) {
       System.err.println("ERROR: Client Exception:" + e.getMessage());
       e.printStackTrace();
     }
+  }
+
+  @Override
+  public void onEvent(Event event) {
+    // TODO Auto-generated method stub
+    
   }
 }
