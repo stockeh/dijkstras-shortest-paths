@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
+import cs455.overlay.transport.TCPReceiverThread;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
@@ -102,7 +103,10 @@ public class MessagingNode implements Node, Protocol {
           new Register( Protocol.REGISTER_REQUEST, ipAddress, port );
 
       sender.sendData( register.getBytes() );
-      socket.close();
+      MessagingNode m = new MessagingNode();
+      (new Thread( new TCPReceiverThread( socket, m ) )).start();
+      
+//      socket.close();
     } catch ( IOException e )
     {
       LOG.error( e.getMessage() );
@@ -138,8 +142,7 @@ public class MessagingNode implements Node, Protocol {
   }
 
   @Override
-  public void onEvent(Event event) {
-    // TODO Auto-generated method stub
-
+  public void onEvent(Event event, Socket socket) {
+    LOG.debug( event.toString() );
   }
 }

@@ -52,8 +52,11 @@ public class EventFactory {
     {
       case Protocol.REGISTER_REQUEST :
         return new Register( marshalledBytes );
+        
+      case Protocol.REGISTER_RESPONSE :
+        return new RegisterResponse( marshalledBytes );
     }
-    LOG.error( "ERROR: Could not create Event" );
+    LOG.error( "Could not create Event" );
     return null;
   }
 }

@@ -27,4 +27,7 @@ public interface Protocol {
 
   final int TRAFFIC_SUMMARY = 8;
 
+  final byte SUCCESS = (byte) 200; 
+
+  final byte FAILURE = (byte) 500; 
 }

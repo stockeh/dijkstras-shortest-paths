@@ -9,19 +9,19 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * Register message type to initialize messaging node with the
- * registry.
+ * Register Response message type to respond to message node with the
+ * status and information from the registry.
  * 
  * @author stock
  *
  */
-public class Register implements Event {
+public class RegisterResponse implements Event {
 
   private int type;
 
-  private String ipAddress;
+  private byte status;
 
-  private int port;
+  private String info;
 
   /**
    * Constructor - Unmarshall the <code>byte[]</code> to the respective
@@ -30,7 +30,7 @@ public class Register implements Event {
    * @param marshalledBytes is the byte array of the class.
    * @throws IOException
    */
-  public Register(byte[] marshalledBytes) throws IOException {
+  public RegisterResponse(byte[] marshalledBytes) throws IOException {
     ByteArrayInputStream inputStream =
         new ByteArrayInputStream( marshalledBytes );
     DataInputStream din =
@@ -38,29 +38,29 @@ public class Register implements Event {
 
     this.type = din.readInt();
 
+    this.status = din.readByte();
+
     int len = din.readInt();
-    byte[] ipBytes = new byte[len];
-    din.readFully( ipBytes );
+    byte[] infoBytes = new byte[len];
+    din.readFully( infoBytes, 0, len );
 
-    this.ipAddress = new String( ipBytes );
-
-    this.port = din.readInt();
+    this.info = new String( infoBytes );
 
     inputStream.close();
     din.close();
   }
 
   /**
-   * Default constructor - create a new register message.
+   * Default constructor - create a new RegisterResponse message.
    * 
    * @param type
-   * @param ipAddress
-   * @param port
+   * @param status
+   * @param info
    */
-  public Register(int type, String ipAddress, int port) {
+  public RegisterResponse(int type, byte status, String info) {
     this.type = type;
-    this.ipAddress = ipAddress;
-    this.port = port;
+    this.status = status;
+    this.info = info;
   }
 
   /**
@@ -68,6 +68,7 @@ public class Register implements Event {
    */
   @Override
   public int getType() {
+    // TODO Auto-generated method stub
     return type;
   }
 
@@ -83,11 +84,11 @@ public class Register implements Event {
 
     dout.writeInt( type );
 
-    byte[] ipBytes = ipAddress.getBytes();
-    dout.writeInt( ipBytes.length );
-    dout.write( ipBytes );
+    dout.writeByte( status );
 
-    dout.writeInt( port );
+    byte[] infoBytes = info.getBytes();
+    dout.writeInt( infoBytes.length );
+    dout.write( infoBytes );
 
     dout.flush();
     marshalledBytes = outputStream.toByteArray();
@@ -102,15 +103,8 @@ public class Register implements Event {
    */
   @Override
   public String toString() {
-    return Integer.toString( this.type ) + " " + this.getConnection();
+    return Integer.toString( type ) + " " + Byte.toString( status ) + " "
+        + info;
   }
 
-  /**
-   * Converts the IP Address and Port to a readable format.
-   * 
-   * @return Returns a string in the format <code>host:port</code>
-   */
-  public String getConnection() {
-    return this.ipAddress + ":" + Integer.toString( this.port );
-  }
 }

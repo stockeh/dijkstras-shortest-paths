@@ -47,6 +47,7 @@ public class TCPSender {
    * @throws IOException
    */
   public void sendData(final byte[] data) throws IOException {
+    LOG.debug( "Sending message to: " + socket.getRemoteSocketAddress() );
     int len = data.length;
     dout.writeInt( len );
     dout.write( data, 0, len );

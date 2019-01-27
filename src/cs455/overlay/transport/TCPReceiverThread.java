@@ -38,7 +38,8 @@ public class TCPReceiverThread implements Runnable {
   }
 
   /**
-   * 
+   * Start running the thread to read from the data input stream.
+   * Create an event from the data and handle it appropriately.
    * 
    * {@inheritDoc}
    */
@@ -55,7 +56,7 @@ public class TCPReceiverThread implements Runnable {
 
         EventFactory eventFactory = EventFactory.getInstance();
         Event event = eventFactory.createEvent( data );
-        node.onEvent( event );
+        node.onEvent( event, socket );
 
       } catch ( SocketException e )
       {

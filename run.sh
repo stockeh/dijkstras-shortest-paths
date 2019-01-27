@@ -7,7 +7,7 @@
 
 PORT=5001
 HOST=localhost
-MULTI="1 2"
+MULTI=""
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 COMPILE="$( ps -ef | grep [c]s455.overlay.node.Registry )"
@@ -23,6 +23,8 @@ function new_tab() {
 
 if [ -z "$COMPILE" ]
 then
+LINES=`find . -name "*.java" -print | xargs wc -l | grep "total" | awk '{$1=$1};1'`
+    echo Project has "$LINES" lines
     make
     open -a Terminal .
     cd $DIR/src; java cs455.overlay.node.Registry $PORT
