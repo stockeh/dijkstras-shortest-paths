@@ -8,8 +8,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
-import cs455.overlay.transport.TCPReceiverThread;
-import cs455.overlay.transport.TCPSender;
+import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.transport.TCPSenderThread;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
@@ -80,7 +80,8 @@ public class MessagingNode implements Node, Protocol {
    * @param host
    * @param port
    */
-  private void registerNode(final String registryHost, final Integer registryPort, final Integer port) {
+  private void registerNode(final String registryHost,
+      final Integer registryPort, final Integer port) {
     @SuppressWarnings( "unused" )
     InetAddress localhost = null;
     try
@@ -88,25 +89,23 @@ public class MessagingNode implements Node, Protocol {
       localhost = InetAddress.getLocalHost();
     } catch ( UnknownHostException e )
     {
-      LOG.error( "ERROR: Local host name "
-          + "could not be resolved into an address" + e.getMessage() );
+      LOG.error( "Localhost name could not be resolved into an address"
+          + e.getMessage() );
       e.printStackTrace();
       return;
     }
     try
     {
       Socket socket = new Socket( registryHost, registryPort );
-      TCPSender sender = new TCPSender( socket );
+      TCPConnection connection = new TCPConnection( this, socket );
+      TCPSenderThread sender = connection.getTCPSenderThread();
 
       String ipAddress = InetAddress.getLocalHost().getHostAddress();
       Register register =
           new Register( Protocol.REGISTER_REQUEST, ipAddress, port );
 
-      sender.sendData( register.getBytes() );
-      MessagingNode m = new MessagingNode();
-      (new Thread( new TCPReceiverThread( socket, m ) )).start();
-      
-//      socket.close();
+      sender.appendMessage( register );
+      (new Thread( connection )).start();
     } catch ( IOException e )
     {
       LOG.error( e.getMessage() );
@@ -142,7 +141,7 @@ public class MessagingNode implements Node, Protocol {
   }
 
   @Override
-  public void onEvent(Event event, Socket socket) {
+  public void onEvent(Event event, TCPConnection connection) {
     LOG.debug( event.toString() );
   }
 }

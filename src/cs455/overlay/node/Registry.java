@@ -2,12 +2,12 @@ package cs455.overlay.node;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import cs455.overlay.transport.TCPSender;
+import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.transport.TCPSenderThread;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
@@ -92,12 +92,12 @@ public class Registry implements Node {
    * @throws IOException
    */
   @Override
-  public void onEvent(Event event, Socket socket) throws IOException {
+  public void onEvent(Event event, TCPConnection connection) throws IOException {
     LOG.debug( event.toString() );
     switch ( event.getType() )
     {
       case Protocol.REGISTER_REQUEST :
-        registerNode( event, socket );
+        registerNode( event, connection );
         break;
     }
   }
@@ -109,28 +109,28 @@ public class Registry implements Node {
    * request (the socket’s input stream) match.
    * 
    * @param event
-   * @param socket
+   * @param connection
    * @throws IOException
    */
-  private void registerNode(Event event, Socket socket) throws IOException {
-    String connection = (( Register ) event).getConnection();
+  private void registerNode(Event event, TCPConnection connection) throws IOException {
+    String conn = (( Register ) event).getConnection();
     byte status;
     String message = "I am from the registry";
     // TODO: check socket IP versus event IP. && boolean?
-    if ( !connections.containsKey( connection ) )
+    if ( !connections.containsKey( conn ) )
     {
       // TODO: Figure out the value for key
-      connections.put( connection, 0 );
+      connections.put( conn, 0 );
       status = Protocol.SUCCESS;
     } else
     {
       status = Protocol.FAILURE;
     }
     
-    TCPSender sender = new TCPSender( socket );
+    TCPSenderThread sender = connection.getTCPSenderThread();
     RegisterResponse response =
         new RegisterResponse( Protocol.REGISTER_RESPONSE, status, message );
-    sender.sendData( response.getBytes() );
+    sender.appendMessage( response );
   }
 
 }

@@ -23,29 +23,33 @@ public class TCPReceiverThread implements Runnable {
 
   private Node node;
 
+  private TCPConnection connection;
+
   /**
    * Default constructor - Initialize the TCPReceiverThread with the
    * socket and data input stream information
    * 
-   * @param socket
    * @param node
+   * @param socket
    * @throws IOException
    */
-  public TCPReceiverThread(Socket socket, Node node) throws IOException {
-    this.socket = socket;
-    this.din = new DataInputStream( socket.getInputStream() );
+  public TCPReceiverThread(Node node, Socket socket, TCPConnection connection)
+      throws IOException {
     this.node = node;
+    this.socket = socket;
+    this.connection = connection;
+    this.din = new DataInputStream( socket.getInputStream() );
   }
 
   /**
-   * Start running the thread to read from the data input stream.
-   * Create an event from the data and handle it appropriately.
+   * Start running the thread to read from the data input stream. Create
+   * an event from the data and handle it appropriately.
    * 
    * {@inheritDoc}
    */
   @Override
   public void run() {
-    if ( socket != null )
+    while ( socket != null )
     {
       try
       {
@@ -56,18 +60,30 @@ public class TCPReceiverThread implements Runnable {
 
         EventFactory eventFactory = EventFactory.getInstance();
         Event event = eventFactory.createEvent( data );
-        node.onEvent( event, socket );
+        node.onEvent( event, connection );
 
       } catch ( SocketException e )
       {
         LOG.error( e.getMessage() );
         e.printStackTrace();
+        break;
 
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );
         e.printStackTrace();
+        break;
       }
+    }
+    try
+    {
+      socket.close();
+      din.close();
+      LOG.debug( "Socket Status.. closed? " + socket.isClosed() );
+    } catch ( IOException e )
+    {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 }

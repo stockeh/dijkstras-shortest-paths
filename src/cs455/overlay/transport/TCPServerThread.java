@@ -37,7 +37,7 @@ public class TCPServerThread implements Runnable {
       {
         Socket socket = serverSocket.accept();
         // Start a new thread so that a new socket can be listened for
-        (new Thread( new TCPReceiverThread( socket, node ) )).start();
+        (new Thread( new TCPConnection( node, socket ) )).start();
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );

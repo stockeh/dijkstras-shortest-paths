@@ -1,7 +1,7 @@
 package cs455.overlay.node;
 
 import java.io.IOException;
-import java.net.Socket;
+import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.wireformats.Event;
 
 /**
@@ -17,6 +17,6 @@ public interface Node {
    * @param socket 
    * @throws IOException 
    */
-  public void onEvent(Event event, Socket socket) throws IOException;
+  public void onEvent(Event event, TCPConnection connection) throws IOException;
 
 }
