@@ -10,10 +10,11 @@ HOST=localhost
 MULTI=""
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
+BUILD="$DIR/build/classes/java/main"
 COMPILE="$( ps -ef | grep [c]s455.overlay.node.Registry )"
 
 function new_tab() {
-    COMMAND="cd $DIR/src; java cs455.overlay.node.MessagingNode $HOST $PORT;"
+    COMMAND="cd $DIR/src; java -cp $BUILD cs455.overlay.node.MessagingNode $HOST $PORT;"
     osascript \
         -e "tell application \"Terminal\"" \
         -e "tell application \"System Events\" to keystroke \"t\" using {command down}" \
@@ -25,9 +26,10 @@ if [ -z "$COMPILE" ]
 then
 LINES=`find . -name "*.java" -print | xargs wc -l | grep "total" | awk '{$1=$1};1'`
     echo Project has "$LINES" lines
-    make
+    gradle clean
+    gradle build
     open -a Terminal .
-    cd $DIR/src; java cs455.overlay.node.Registry $PORT
+    cd $DIR/src; java -cp $BUILD cs455.overlay.node.Registry $PORT
 else
     if [ -n "$MULTI" ]
     then
@@ -36,5 +38,5 @@ else
             new_tab
         done
     fi
-    cd $DIR/src; java cs455.overlay.node.MessagingNode $HOST $PORT;
+    cd $DIR/src; java -cp $BUILD cs455.overlay.node.MessagingNode $HOST $PORT;
 fi
