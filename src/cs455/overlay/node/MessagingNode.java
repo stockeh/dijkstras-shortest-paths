@@ -1,15 +1,12 @@
 package cs455.overlay.node;
 
 import java.io.IOException;
-import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
 import cs455.overlay.transport.TCPConnection;
-import cs455.overlay.transport.TCPSenderThread;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
@@ -31,11 +28,20 @@ public class MessagingNode implements Node, Protocol {
    */
   private final static Logger LOG = new Logger( true, true );
 
-  private final static int MAX_PORTS = 65535;
-
   private final static String PRINT_SHORTEST_PATH = "print-shortest-path";
 
   private final static String EXIT_OVERLAY = "exit-overlay";
+
+  private TCPConnection registryConnection;
+
+  private Integer nodePort;
+
+  private String nodeHost;
+
+  public MessagingNode(String nodeHost, int nodePort) {
+    this.nodeHost = nodeHost;
+    this.nodePort = nodePort;
+  }
 
   /**
    * Diver for each messaging node.
@@ -43,34 +49,29 @@ public class MessagingNode implements Node, Protocol {
    * @param args
    */
   public static void main(String[] args) {
-    if ( args.length < 2 && (Integer.parseInt( args[1] ) < 1024
-        || Integer.parseInt( args[1] ) > 65535) )
+    if ( args.length < 2 )
     {
       LOG.error(
           "USAGE: java cs455.overlay.node.MessagingNode registry-host registry-port" );
-      return;
+      System.exit( 1 );
     }
     LOG.info( "Messaging Node starting up at: " + new Date() );
-    MessagingNode node = new MessagingNode();
 
-    for ( int port = 1025; port < MAX_PORTS; )
+    try ( ServerSocket serverSocket = new ServerSocket( 0 ) )
     {
-      try ( ServerSocket serverSocket = new ServerSocket( port ) )
-      {
+      int nodePort = serverSocket.getLocalPort();
+      MessagingNode node = new MessagingNode(
+          InetAddress.getLocalHost().getHostAddress(), nodePort );
 
-        (new Thread( new TCPServerThread( node, serverSocket ) )).start();
-        node.registerNode( args[0], Integer.valueOf( args[1] ), port );
-        node.interact();
+      (new Thread( new TCPServerThread( node, serverSocket ) )).start();
+      node.registerNode( args[0], Integer.valueOf( args[1] ) );
+      node.interact();
 
-      } catch ( BindException e )
-      {
-        LOG.error( e.getMessage() );
-        ++port;
-      } catch ( IOException e )
-      {
-        LOG.error( e.getMessage() );
-        break;
-      }
+    } catch ( IOException e )
+    {
+      LOG.error( "Exiting " + e.getMessage() );
+      e.printStackTrace();
+      System.exit( 1 );
     }
   }
 
@@ -79,33 +80,21 @@ public class MessagingNode implements Node, Protocol {
    *
    * @param host
    * @param port
+   * @return
    */
-  private void registerNode(final String registryHost,
-      final Integer registryPort, final Integer port) {
-    @SuppressWarnings( "unused" )
-    InetAddress localhost = null;
-    try
-    {
-      localhost = InetAddress.getLocalHost();
-    } catch ( UnknownHostException e )
-    {
-      LOG.error( "Localhost name could not be resolved into an address"
-          + e.getMessage() );
-      e.printStackTrace();
-      return;
-    }
+  private void registerNode(String registryHost, Integer registryPort) {
     try
     {
       Socket socket = new Socket( registryHost, registryPort );
       TCPConnection connection = new TCPConnection( this, socket );
-      TCPSenderThread sender = connection.getTCPSenderThread();
 
-      String ipAddress = InetAddress.getLocalHost().getHostAddress();
-      Register register =
-          new Register( Protocol.REGISTER_REQUEST, ipAddress, port );
+      Register register = new Register( Protocol.REGISTER_REQUEST,
+          this.nodeHost, this.nodePort );
 
-      sender.appendMessage( register );
+      connection.getTCPSenderThread().appendMessage( register );
+
       (new Thread( connection )).start();
+      this.registryConnection = connection;
     } catch ( IOException e )
     {
       LOG.error( e.getMessage() );
@@ -126,20 +115,37 @@ public class MessagingNode implements Node, Protocol {
       switch ( scan.nextLine() )
       {
         case PRINT_SHORTEST_PATH :
-          LOG.info( "print-shortest-path" );
           break;
 
         case EXIT_OVERLAY :
-          LOG.info( "exit-overlay" );
+          exitOverlay();
           break;
 
         default :
-          LOG.info( "Not a valid command" );
+          LOG.info(
+              "Not a valid command. USAGE: print-shortest-path | exit-overlay" );
           break;
       }
     }
   }
 
+  /**
+   * Remove the node from the registry. TODO: Do I close the socket
+   * here? Current exceptions.
+   */
+  private void exitOverlay() {
+    LOG.debug( "HOST:PORT " + this.nodeHost + ":"
+        + Integer.toString( this.nodePort ) + " is leaving the overlay");
+
+    Register register = new Register( Protocol.DEREGISTER_REQUEST,
+        this.nodeHost, this.nodePort );
+
+    registryConnection.getTCPSenderThread().appendMessage( register );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void onEvent(Event event, TCPConnection connection) {
     LOG.debug( event.toString() );

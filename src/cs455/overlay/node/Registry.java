@@ -85,52 +85,93 @@ public class Registry implements Node {
   }
 
   /**
-   * Handle events delivered by messages TODO: Manage throws exception
-   * 
-   * @param event
-   * @param socket
-   * @throws IOException
+   * {@inheritDoc}
    */
   @Override
-  public void onEvent(Event event, TCPConnection connection) throws IOException {
+  public void onEvent(Event event, TCPConnection connection) {
     LOG.debug( event.toString() );
     switch ( event.getType() )
     {
       case Protocol.REGISTER_REQUEST :
-        registerNode( event, connection );
+        registrationHandler( event, connection, true );
+        break;
+
+      case Protocol.DEREGISTER_REQUEST :
+        registrationHandler( event, connection, false );
         break;
     }
   }
 
   /**
-   * Register a new MessagingNode to the Registry. Verify the node had
-   * <b>not</b> previously been registered, and the address that is
-   * specified in the registration request and the IP address of the
-   * request (the socket’s input stream) match.
+   * Manage the registry synchronously by either registering a new
+   * MessagingNode or removing one from the system.
    * 
-   * @param event
-   * @param connection
-   * @throws IOException
+   * @param event the object containing node details
+   * @param connection the connection details, i.e., TCPSenderThread
+   * @param register true to register new node, false to remove it
    */
-  private void registerNode(Event event, TCPConnection connection) throws IOException {
-    String conn = (( Register ) event).getConnection();
+  private synchronized void registrationHandler(Event event,
+      TCPConnection connection, final boolean register) {
+    String nodeDetails = (( Register ) event).getConnection();
+    String message = registerStatusMessage( nodeDetails, connection.getSocket()
+        .getRemoteSocketAddress().toString().split( ":" )[0].substring( 1 ),
+        register );
     byte status;
-    String message = "I am from the registry";
-    // TODO: check socket IP versus event IP. && boolean?
-    if ( !connections.containsKey( conn ) )
+    if ( message.length() == 0 )
     {
-      // TODO: Figure out the value for key
-      connections.put( conn, 0 );
+      if ( register )
+      {
+        connections.put( nodeDetails, 0 );
+      } else
+      {
+        connections.remove( nodeDetails );
+      }
+      message =
+          "Registration request successful.  The number of messaging nodes currently "
+              + "constituting the overlay is (" + connections.size() + ").";
       status = Protocol.SUCCESS;
     } else
     {
       status = Protocol.FAILURE;
     }
-    
+
     TCPSenderThread sender = connection.getTCPSenderThread();
     RegisterResponse response =
         new RegisterResponse( Protocol.REGISTER_RESPONSE, status, message );
     sender.appendMessage( response );
+  }
+
+  /**
+   * Verify the node had <b>not</b> previously been registered, and the
+   * address that is specified in the registration request and the IP
+   * address of the request (the socket’s input stream) match.
+   * 
+   * @param nodeDetails the host:port from the event message (request)
+   * @param connectionIP the remote socket IP address from the current
+   *        TCPConnection
+   * @return a <code>String</code> containing the error message, or
+   *         otherwise empty
+   */
+  private String registerStatusMessage(String nodeDetails, String connectionIP,
+      final boolean register) {
+    String message = "";
+    if ( connections.containsKey( nodeDetails ) && register )
+    {
+      message =
+          "The node, " + nodeDetails + " had previously registered and has "
+              + "a valid entry in its registry. ";
+    } else if ( !connections.containsKey( nodeDetails ) && !register )
+    { // The case that the item is not in the registry.
+      message =
+          "The node, " + nodeDetails + " had not previously been registered. ";
+    }
+    /**
+     * TODO: Check connection IP from local host connections. CURRENTLY
+     * NOT CHECKING if ( !nodeDetails.split( ":" )[0].equals( connectionIP
+     * ) ) { message += "There is a mismatch in the address that is
+     * specified in request and " + "the IP of the socket."; }
+     */
+    return message;
   }
 
 }

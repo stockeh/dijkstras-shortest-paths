@@ -10,3 +10,4 @@ build
 # Ignore Eclipse project settings
 .classpath
 .project
+*.class

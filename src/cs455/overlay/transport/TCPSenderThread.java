@@ -76,7 +76,6 @@ public class TCPSenderThread implements Runnable {
     {
       if ( !queue.isEmpty() ) 
       {
-        LOG.debug( "The Queue is full " );
         try
         {
           sendData( queue.poll().getBytes() );

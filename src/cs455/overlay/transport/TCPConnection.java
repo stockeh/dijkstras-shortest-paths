@@ -24,6 +24,8 @@ public class TCPConnection implements Runnable {
   @SuppressWarnings( "unused" )
   private Node node;
 
+  private Socket socket;
+  
   private TCPSenderThread sender;
 
   private TCPReceiverThread receiver;
@@ -38,15 +40,25 @@ public class TCPConnection implements Runnable {
    */
   public TCPConnection(Node node, Socket socket) throws IOException {
     this.node = node;
+    this.socket = socket;
     this.sender = new TCPSenderThread( socket );
     this.receiver = new TCPReceiverThread( node, socket, this );
   }
 
   /**
+   * Get the Socket for the connection to verify Inet information
+   * 
+   * @return the socket for the connection.
+   */
+  public Socket getSocket() {
+    return socket;
+  }
+  
+  /**
    * Get the TCPSenderThread so the client or server can send a message
    * over the socket
    * 
-   * @return Returns the TCPSenderThread instance that was instantiated
+   * @return the TCPSenderThread instance that was instantiated
    *         during the {@link #run()} method of the new thread.
    */
   public TCPSenderThread getTCPSenderThread() {

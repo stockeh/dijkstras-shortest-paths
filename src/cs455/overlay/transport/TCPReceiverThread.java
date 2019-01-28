@@ -75,11 +75,10 @@ public class TCPReceiverThread implements Runnable {
         break;
       }
     }
-    try
+    try // TODO: Check if this is the right place to close...
     {
       socket.close();
       din.close();
-      LOG.debug( "Socket Status.. closed? " + socket.isClosed() );
     } catch ( IOException e )
     {
       // TODO Auto-generated catch block

@@ -41,9 +41,11 @@ public class EventFactory {
   }
 
   /**
+   * Create a new event, i.e., messaging object from the marshalledBytes
+   * of said object.
    * 
    * @param message
-   * @return
+   * @return the event object from the <code>byte[]</code>.
    * @throws IOException
    */
   public Event createEvent(byte[] marshalledBytes) throws IOException {
@@ -52,11 +54,16 @@ public class EventFactory {
     {
       case Protocol.REGISTER_REQUEST :
         return new Register( marshalledBytes );
-        
+
       case Protocol.REGISTER_RESPONSE :
         return new RegisterResponse( marshalledBytes );
+        
+      case Protocol.DEREGISTER_REQUEST :
+        return new Register( marshalledBytes );
+
+      default :
+        LOG.error( "Event could not be created." );
+        return null;
     }
-    LOG.error( "Could not create Event" );
-    return null;
   }
 }
