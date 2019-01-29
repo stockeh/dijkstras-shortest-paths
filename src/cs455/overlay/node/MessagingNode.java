@@ -31,8 +31,6 @@ public class MessagingNode implements Node, Protocol {
   private final static String PRINT_SHORTEST_PATH = "print-shortest-path";
 
   private final static String EXIT_OVERLAY = "exit-overlay";
-  
-  private final static String QUIT = "quit";
 
   private TCPConnection registryConnection;
 
@@ -63,18 +61,17 @@ public class MessagingNode implements Node, Protocol {
     {
       int nodePort = serverSocket.getLocalPort();
       MessagingNode node = new MessagingNode(
-          InetAddress.getLocalHost().getHostName(), nodePort );
+          InetAddress.getLocalHost().getHostAddress(), nodePort );
 
       (new Thread( new TCPServerThread( node, serverSocket ) )).start();
       node.registerNode( args[0], Integer.valueOf( args[1] ) );
       node.interact();
-
     } catch ( IOException e )
     {
       LOG.error( "Exiting " + e.getMessage() );
       e.printStackTrace();
-      System.exit( 1 );
     }
+
   }
 
   /**
@@ -93,9 +90,9 @@ public class MessagingNode implements Node, Protocol {
       Register register = new Register( Protocol.REGISTER_REQUEST,
           this.nodeHost, this.nodePort );
 
-      connection.getTCPSenderThread().appendMessage( register );
+      connection.getTCPSenderThread().appendData( register );
 
-      (new Thread( connection )).start();
+      connection.start();
       this.registryConnection = connection;
     } catch ( IOException e )
     {
@@ -111,7 +108,8 @@ public class MessagingNode implements Node, Protocol {
   @SuppressWarnings( "resource" )
   private void interact() {
     LOG.info( "Input a command to interact with processes" );
-    while ( true )
+    boolean running = true;
+    while ( running )
     {
       Scanner scan = new Scanner( System.in );
       switch ( scan.nextLine() )
@@ -121,10 +119,8 @@ public class MessagingNode implements Node, Protocol {
 
         case EXIT_OVERLAY :
           exitOverlay();
+          running = false;
           break;
-          
-        case QUIT :
-          System.exit( 0 );
 
         default :
           LOG.info(
@@ -140,12 +136,20 @@ public class MessagingNode implements Node, Protocol {
    */
   private void exitOverlay() {
     LOG.debug( "HOST:PORT " + this.nodeHost + ":"
-        + Integer.toString( this.nodePort ) + " is leaving the overlay");
+        + Integer.toString( this.nodePort ) + " is leaving the overlay" );
 
     Register register = new Register( Protocol.DEREGISTER_REQUEST,
         this.nodeHost, this.nodePort );
 
-    registryConnection.getTCPSenderThread().appendMessage( register );
+    registryConnection.getTCPSenderThread().appendData( register );
+    try
+    {
+      registryConnection.close();
+    } catch ( IOException | InterruptedException e )
+    {
+      LOG.error( "Could not close TCPConnection. " + e.getMessage() );
+      e.printStackTrace();
+    }
   }
 
   /**

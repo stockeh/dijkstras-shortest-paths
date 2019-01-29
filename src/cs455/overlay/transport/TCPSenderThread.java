@@ -45,10 +45,11 @@ public class TCPSenderThread implements Runnable {
    * 
    * @param e
    */
-  public void appendMessage(Event e) {
+  public synchronized void appendData(Event e) {
     queue.offer( e );
+    notify();
   }
-  
+
   /**
    * Send the data through the {@link TCPSenderThread#socket} using the
    * {@link TCPSenderThread#dout} data output stream. Write the length
@@ -66,26 +67,33 @@ public class TCPSenderThread implements Runnable {
     dout.flush();
   }
 
+  private synchronized void trySending() throws InterruptedException, IOException {
+    while ( queue.isEmpty() )
+    {
+      wait();
+    }
+    sendData( queue.poll().getBytes() );
+  }
+  
   /**
    * Retrieves and removes the head of the queue, and send the data as a
    * marshalled array of bytes.
+   * 
    */
   @Override
   public void run() {
-    while ( true )
+    while ( !socket.isClosed() )
     {
-      if ( !queue.isEmpty() ) 
+      try
       {
-        try
-        {
-          sendData( queue.poll().getBytes() );
-        } catch ( IOException e )
-        {
-          LOG.error( e.getMessage() );
-          e.printStackTrace();
-        }
+        trySending();
+      } catch ( InterruptedException | IOException e )
+      {
+        LOG.error( e.getMessage() );
+        e.printStackTrace();
+        break;
       }
     }
+    LOG.info( "tcpSENDERthread" );
   }
-
 }

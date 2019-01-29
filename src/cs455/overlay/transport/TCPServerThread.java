@@ -31,18 +31,18 @@ public class TCPServerThread implements Runnable {
    */
   @Override
   public void run() {
-    while ( true )
+    while ( serverSocket != null )
     {
       try
       {
         Socket socket = serverSocket.accept();
-        // Start a new thread so that a new socket can be listened for
-        (new Thread( new TCPConnection( node, socket ) )).start();
+        ( new TCPConnection( node, socket ) ).start();
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );
-        e.printStackTrace();
+        break;
       }
     }
+    LOG.info( "tcpSERVERthread" );
   }
 }

@@ -2,6 +2,7 @@ package cs455.overlay.transport;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 import cs455.overlay.node.Node;
 import cs455.overlay.util.Logger;
 
@@ -12,7 +13,7 @@ import cs455.overlay.util.Logger;
  * @author stock
  *
  */
-public class TCPConnection implements Runnable {
+public class TCPConnection {
 
   /**
    * Have the ability to log output INFO, DEBUG, ERROR configured by
@@ -20,9 +21,6 @@ public class TCPConnection implements Runnable {
    */
   @SuppressWarnings( "unused" )
   private final static Logger LOG = new Logger( true, true );
-
-  @SuppressWarnings( "unused" )
-  private Node node;
 
   private Socket socket;
   
@@ -39,10 +37,9 @@ public class TCPConnection implements Runnable {
    * @throws IOException
    */
   public TCPConnection(Node node, Socket socket) throws IOException {
-    this.node = node;
     this.socket = socket;
-    this.sender = new TCPSenderThread( socket );
-    this.receiver = new TCPReceiverThread( node, socket, this );
+    this.sender = new TCPSenderThread( this.socket );
+    this.receiver = new TCPReceiverThread( node, this.socket, this );
   }
 
   /**
@@ -51,7 +48,17 @@ public class TCPConnection implements Runnable {
    * @return the socket for the connection.
    */
   public Socket getSocket() {
-    return socket;
+    return this.socket;
+  }
+  
+  /**
+   * 
+   * @throws IOException
+   * @throws InterruptedException 
+   */
+  public void close() throws IOException, InterruptedException {
+    TimeUnit.SECONDS.sleep(1);
+    this.socket.close();
   }
   
   /**
@@ -65,9 +72,11 @@ public class TCPConnection implements Runnable {
     return sender;
   }
 
-  @Override
-  public void run() {
-    (new Thread( sender )).start();
-    (new Thread( receiver )).start();
+  /**
+   * 
+   */
+  public void start() {
+    (new Thread( this.receiver )).start();
+    (new Thread( this.sender )).start();
   }
 }

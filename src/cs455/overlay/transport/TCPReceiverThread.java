@@ -69,12 +69,12 @@ public class TCPReceiverThread implements Runnable {
     }
     try
     {
-      socket.close();
       din.close();
     } catch ( IOException e )
     {
       LOG.error( e.getMessage() );
       e.printStackTrace();
     }
+    LOG.info( "tcpRECEIVERthread" );
   }
 }

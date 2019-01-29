@@ -138,7 +138,7 @@ public class Registry implements Node {
     TCPSenderThread sender = connection.getTCPSenderThread();
     RegisterResponse response =
         new RegisterResponse( Protocol.REGISTER_RESPONSE, status, message );
-    sender.appendMessage( response );
+    sender.appendData( response );
   }
 
   /**
@@ -170,8 +170,9 @@ public class Registry implements Node {
      * NOT CHECKING
      */
     LOG.info( "NODE DETAILS: " + nodeDetails );
-    LOG.info( "CONNECTION DETAILS : " + connectionIP );
-    if ( !nodeDetails.split( ":" )[0].equals( connectionIP ) )
+    LOG.info( "CONNECTION DETAILS: " + connectionIP );
+    if ( !nodeDetails.split( ":" )[0].equals( connectionIP )
+        && !connectionIP.equals( "127.0.0.1" ) )
     {
       message +=
           "There is a mismatch in the address that isspecified in request and "
