@@ -113,8 +113,8 @@ public class Registry implements Node {
   private synchronized void registrationHandler(Event event,
       TCPConnection connection, final boolean register) {
     String nodeDetails = (( Register ) event).getConnection();
-    String message = registerStatusMessage( nodeDetails, connection.getSocket()
-        .getRemoteSocketAddress().toString().split( ":" )[0].substring( 1 ),
+    String message = registerStatusMessage( nodeDetails,
+        connection.getSocket().getInetAddress().getHostName(),
         register );
     byte status;
     if ( message.length() == 0 )
@@ -167,10 +167,16 @@ public class Registry implements Node {
     }
     /**
      * TODO: Check connection IP from local host connections. CURRENTLY
-     * NOT CHECKING if ( !nodeDetails.split( ":" )[0].equals( connectionIP
-     * ) ) { message += "There is a mismatch in the address that is
-     * specified in request and " + "the IP of the socket."; }
+     * NOT CHECKING
      */
+    LOG.info( "NODE DETAILS: " + nodeDetails );
+    LOG.info( "CONNECTION DETAILS : " + connectionIP );
+    if ( !nodeDetails.split( ":" )[0].equals( connectionIP ) )
+    {
+      message +=
+          "There is a mismatch in the address that isspecified in request and "
+              + "the IP of the socket.";
+    }
     return message;
   }
 

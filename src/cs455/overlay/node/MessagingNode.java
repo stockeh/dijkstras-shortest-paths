@@ -32,6 +32,8 @@ public class MessagingNode implements Node, Protocol {
 
   private final static String EXIT_OVERLAY = "exit-overlay";
 
+  private final static String QUIT = "quit";
+
   private TCPConnection registryConnection;
 
   private Integer nodePort;
@@ -60,8 +62,10 @@ public class MessagingNode implements Node, Protocol {
     try ( ServerSocket serverSocket = new ServerSocket( 0 ) )
     {
       int nodePort = serverSocket.getLocalPort();
+      serverSocket.getInetAddress();
       MessagingNode node = new MessagingNode(
-          InetAddress.getLocalHost().getHostAddress(), nodePort );
+          InetAddress.getLocalHost().getHostName(),
+          nodePort );
 
       (new Thread( new TCPServerThread( node, serverSocket ) )).start();
       node.registerNode( args[0], Integer.valueOf( args[1] ) );
@@ -121,6 +125,9 @@ public class MessagingNode implements Node, Protocol {
           exitOverlay();
           break;
 
+        case QUIT :
+          System.exit( 0 );
+
         default :
           LOG.info(
               "Not a valid command. USAGE: print-shortest-path | exit-overlay" );
@@ -135,7 +142,7 @@ public class MessagingNode implements Node, Protocol {
    */
   private void exitOverlay() {
     LOG.debug( "HOST:PORT " + this.nodeHost + ":"
-        + Integer.toString( this.nodePort ) + " is leaving the overlay");
+        + Integer.toString( this.nodePort ) + " is leaving the overlay" );
 
     Register register = new Register( Protocol.DEREGISTER_REQUEST,
         this.nodeHost, this.nodePort );

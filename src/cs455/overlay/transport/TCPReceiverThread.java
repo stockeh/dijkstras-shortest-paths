@@ -3,7 +3,6 @@ package cs455.overlay.transport;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketException;
 import cs455.overlay.node.Node;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
@@ -62,26 +61,19 @@ public class TCPReceiverThread implements Runnable {
         Event event = eventFactory.createEvent( data );
         node.onEvent( event, connection );
 
-      } catch ( SocketException e )
-      {
-        LOG.error( e.getMessage() );
-        e.printStackTrace();
-        break;
-
       } catch ( IOException e )
       {
-        LOG.error( e.getMessage() );
-        e.printStackTrace();
+        LOG.error( "Closing connection... " + e );
         break;
       }
     }
-    try // TODO: Check if this is the right place to close...
+    try
     {
       socket.close();
       din.close();
     } catch ( IOException e )
     {
-      // TODO Auto-generated catch block
+      LOG.error( e.getMessage() );
       e.printStackTrace();
     }
   }
