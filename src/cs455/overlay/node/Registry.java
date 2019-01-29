@@ -113,8 +113,8 @@ public class Registry implements Node {
   private synchronized void registrationHandler(Event event,
       TCPConnection connection, final boolean register) {
     String nodeDetails = (( Register ) event).getConnection();
-    String message = registerStatusMessage( nodeDetails,
-        connection.getSocket().getInetAddress().getHostName(),
+    String message = registerStatusMessage( nodeDetails, connection.getSocket()
+        .getRemoteSocketAddress().toString().split( ":" )[0].substring( 1 ),
         register );
     byte status;
     if ( message.length() == 0 )
