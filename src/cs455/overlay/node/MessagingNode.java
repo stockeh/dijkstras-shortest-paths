@@ -26,11 +26,11 @@ public class MessagingNode implements Node, Protocol {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private final static Logger LOG = new Logger( true, true );
+  private static final Logger LOG = new Logger( true, true );
 
-  private final static String PRINT_SHORTEST_PATH = "print-shortest-path";
+  private static final String PRINT_SHORTEST_PATH = "print-shortest-path";
 
-  private final static String EXIT_OVERLAY = "exit-overlay";
+  private static final String EXIT_OVERLAY = "exit-overlay";
 
   private TCPConnection registryConnection;
 
@@ -44,7 +44,8 @@ public class MessagingNode implements Node, Protocol {
   }
 
   /**
-   * Diver for each messaging node.
+   * Start up a new TCPServerThread for the messaging node to listen on
+   * then register the node.
    *
    * @param args
    */
@@ -56,7 +57,6 @@ public class MessagingNode implements Node, Protocol {
       System.exit( 1 );
     }
     LOG.info( "Messaging Node starting up at: " + new Date() );
-
     try ( ServerSocket serverSocket = new ServerSocket( 0 ) )
     {
       int nodePort = serverSocket.getLocalPort();
@@ -84,8 +84,8 @@ public class MessagingNode implements Node, Protocol {
   private void registerNode(String registryHost, Integer registryPort) {
     try
     {
-      Socket socket = new Socket( registryHost, registryPort );
-      TCPConnection connection = new TCPConnection( this, socket );
+      Socket socketToTheServer = new Socket( registryHost, registryPort );
+      TCPConnection connection = new TCPConnection( this, socketToTheServer );
 
       Register register = new Register( Protocol.REGISTER_REQUEST,
           this.nodeHost, this.nodePort );

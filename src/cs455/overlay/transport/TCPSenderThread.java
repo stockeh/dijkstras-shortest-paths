@@ -67,14 +67,19 @@ public class TCPSenderThread implements Runnable {
     dout.flush();
   }
 
-  private synchronized void trySending() throws InterruptedException, IOException {
-    while ( queue.isEmpty() )
+  private synchronized void trySending()
+      throws InterruptedException, IOException {
+    while ( queue.isEmpty() && !socket.isClosed())
     {
-      wait();
+      wait( 1000 );
+
     }
-    sendData( queue.poll().getBytes() );
+    if ( !socket.isClosed() )
+    {
+      sendData( queue.poll().getBytes() );
+    }
   }
-  
+
   /**
    * Retrieves and removes the head of the queue, and send the data as a
    * marshalled array of bytes.
@@ -94,6 +99,5 @@ public class TCPSenderThread implements Runnable {
         break;
       }
     }
-    LOG.info( "tcpSENDERthread" );
   }
 }

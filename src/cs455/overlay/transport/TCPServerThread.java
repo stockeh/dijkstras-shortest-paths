@@ -35,14 +35,13 @@ public class TCPServerThread implements Runnable {
     {
       try
       {
-        Socket socket = serverSocket.accept();
-        ( new TCPConnection( node, socket ) ).start();
+        Socket incomingConnectionSocket = serverSocket.accept();
+        ( new TCPConnection( node, incomingConnectionSocket ) ).start();
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );
         break;
       }
     }
-    LOG.info( "tcpSERVERthread" );
   }
 }

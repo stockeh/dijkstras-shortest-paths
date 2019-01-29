@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import cs455.overlay.transport.TCPConnection;
-import cs455.overlay.transport.TCPSenderThread;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
@@ -27,11 +26,13 @@ public class Registry implements Node {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private final static Logger LOG = new Logger( true, true );
+  private static final Logger LOG = new Logger( true, true );
 
   private static Map<String, Integer> connections = new HashMap<>();
 
-  private final static String LIST_MSG_NODES = "list-messaging-nodes";
+  private static final String LIST_MSG_NODES = "list-messaging-nodes";
+
+  private static final String SETUP_OVERLAY = "setup-overlay";
 
   /**
    * Stands-up the registry.
@@ -73,6 +74,10 @@ public class Registry implements Node {
       Scanner scan = new Scanner( System.in );
       switch ( scan.nextLine() )
       {
+        case SETUP_OVERLAY :
+          
+          break;
+          
         case LIST_MSG_NODES :
           LOG.info( "list-messaging-nodes" );
           break;
@@ -135,10 +140,9 @@ public class Registry implements Node {
       status = Protocol.FAILURE;
     }
 
-    TCPSenderThread sender = connection.getTCPSenderThread();
     RegisterResponse response =
         new RegisterResponse( Protocol.REGISTER_RESPONSE, status, message );
-    sender.appendData( response );
+    connection.getTCPSenderThread().appendData( response );
   }
 
   /**

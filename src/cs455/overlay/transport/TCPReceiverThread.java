@@ -75,6 +75,5 @@ public class TCPReceiverThread implements Runnable {
       LOG.error( e.getMessage() );
       e.printStackTrace();
     }
-    LOG.info( "tcpRECEIVERthread" );
   }
 }
