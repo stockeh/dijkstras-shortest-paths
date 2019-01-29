@@ -18,7 +18,7 @@ public class TCPReceiverThread implements Runnable {
 
   private Socket socket;
 
-  private DataInputStream din;
+  protected DataInputStream din;
 
   private Node node;
 
@@ -30,6 +30,7 @@ public class TCPReceiverThread implements Runnable {
    * 
    * @param node
    * @param socket
+   * @param connection
    * @throws IOException
    */
   public TCPReceiverThread(Node node, Socket socket, TCPConnection connection)
@@ -66,14 +67,6 @@ public class TCPReceiverThread implements Runnable {
         LOG.error( "Closing connection... " + e );
         break;
       }
-    }
-    try
-    {
-      din.close();
-    } catch ( IOException e )
-    {
-      LOG.error( e.getMessage() );
-      e.printStackTrace();
     }
   }
 }

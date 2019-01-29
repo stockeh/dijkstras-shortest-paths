@@ -71,7 +71,6 @@ public class MessagingNode implements Node, Protocol {
       LOG.error( "Exiting " + e.getMessage() );
       e.printStackTrace();
     }
-
   }
 
   /**
@@ -90,9 +89,9 @@ public class MessagingNode implements Node, Protocol {
       Register register = new Register( Protocol.REGISTER_REQUEST,
           this.nodeHost, this.nodePort );
 
-      connection.getTCPSenderThread().appendData( register );
-
+      connection.getTCPSenderThread().sendData( register.getBytes() );
       connection.start();
+
       this.registryConnection = connection;
     } catch ( IOException e )
     {
@@ -141,13 +140,13 @@ public class MessagingNode implements Node, Protocol {
     Register register = new Register( Protocol.DEREGISTER_REQUEST,
         this.nodeHost, this.nodePort );
 
-    registryConnection.getTCPSenderThread().appendData( register );
     try
     {
+      registryConnection.getTCPSenderThread().sendData( register.getBytes() );
       registryConnection.close();
     } catch ( IOException | InterruptedException e )
     {
-      LOG.error( "Could not close TCPConnection. " + e.getMessage() );
+      LOG.error( e.getMessage() );
       e.printStackTrace();
     }
   }

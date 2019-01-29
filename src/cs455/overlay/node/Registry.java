@@ -142,7 +142,14 @@ public class Registry implements Node {
 
     RegisterResponse response =
         new RegisterResponse( Protocol.REGISTER_RESPONSE, status, message );
-    connection.getTCPSenderThread().appendData( response );
+    try
+    {
+      connection.getTCPSenderThread().sendData( response.getBytes() );
+    } catch ( IOException e )
+    {
+      LOG.error( e.getMessage() );
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -169,12 +176,6 @@ public class Registry implements Node {
       message =
           "The node, " + nodeDetails + " had not previously been registered. ";
     }
-    /**
-     * TODO: Check connection IP from local host connections. CURRENTLY
-     * NOT CHECKING
-     */
-    LOG.info( "NODE DETAILS: " + nodeDetails );
-    LOG.info( "CONNECTION DETAILS: " + connectionIP );
     if ( !nodeDetails.split( ":" )[0].equals( connectionIP )
         && !connectionIP.equals( "127.0.0.1" ) )
     {

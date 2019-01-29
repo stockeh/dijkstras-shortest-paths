@@ -23,7 +23,7 @@ public class TCPConnection {
   private final static Logger LOG = new Logger( true, true );
 
   private Socket socket;
-  
+
   private TCPSenderThread sender;
 
   private TCPReceiverThread receiver;
@@ -50,33 +50,37 @@ public class TCPConnection {
   public Socket getSocket() {
     return this.socket;
   }
-  
-  /**
-   * 
-   * @throws IOException
-   * @throws InterruptedException 
-   */
-  public void close() throws IOException, InterruptedException {
-    TimeUnit.SECONDS.sleep(1);
-    this.socket.close();
-  }
-  
+
   /**
    * Get the TCPSenderThread so the client or server can send a message
    * over the socket
    * 
-   * @return the TCPSenderThread instance that was instantiated
-   *         during the {@link #run()} method of the new thread.
+   * @return the TCPSenderThread instance that was instantiated during
+   *         the {@link #run()} method of the new thread.
    */
   public TCPSenderThread getTCPSenderThread() {
-    return sender;
+    return this.sender;
   }
 
   /**
+   * Allow the TCPConnection to start receiving messages.
    * 
    */
   public void start() {
     (new Thread( this.receiver )).start();
-    (new Thread( this.sender )).start();
+  }
+
+  /**
+   * Close the socket sender and receiver. Use a one second wait to
+   * ensure all remaining messages are sent.
+   * 
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  public void close() throws IOException, InterruptedException {
+    TimeUnit.SECONDS.sleep( 1 );
+    this.socket.close();
+    this.sender.dout.close();
+    this.receiver.din.close();
   }
 }
