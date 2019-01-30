@@ -9,6 +9,7 @@ import java.util.Scanner;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
+import cs455.overlay.util.OverlayCreator;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
@@ -28,7 +29,7 @@ public class Registry implements Node {
    */
   private static final Logger LOG = new Logger( true, true );
 
-  private static Map<String, Integer> connections = new HashMap<>();
+  private static Map<String, TCPConnection> connections = new HashMap<>();
 
   private static final String LIST_MSG_NODES = "list-messaging-nodes";
 
@@ -75,7 +76,7 @@ public class Registry implements Node {
       switch ( scan.nextLine() )
       {
         case SETUP_OVERLAY :
-          
+          (new OverlayCreator()).setupOverlay(connections);
           break;
           
         case LIST_MSG_NODES :
@@ -103,7 +104,7 @@ public class Registry implements Node {
 
       case Protocol.DEREGISTER_REQUEST :
         registrationHandler( event, connection, false );
-        break;
+        break;        
     }
   }
 
@@ -126,7 +127,7 @@ public class Registry implements Node {
     {
       if ( register )
       {
-        connections.put( nodeDetails, 0 );
+        connections.put( nodeDetails, connection );
       } else
       {
         connections.remove( nodeDetails );

@@ -61,6 +61,9 @@ public class EventFactory {
       case Protocol.DEREGISTER_REQUEST :
         return new Register( marshalledBytes );
 
+      case Protocol.MESSAGING_NODE_LIST :
+        return new MessagingNodeList( marshalledBytes );
+        
       default :
         LOG.error( "Event could not be created." );
         return null;

@@ -156,6 +156,7 @@ public class MessagingNode implements Node, Protocol {
    */
   @Override
   public void onEvent(Event event, TCPConnection connection) {
+    LOG.debug( "HERE" );
     LOG.debug( event.toString() );
   }
 }
