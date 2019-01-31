@@ -45,7 +45,7 @@ public class Register implements Event {
     this.ipAddress = new String( ipBytes );
 
     this.port = din.readInt();
-
+    
     inputStream.close();
     din.close();
   }
