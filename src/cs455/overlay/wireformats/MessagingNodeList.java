@@ -115,7 +115,7 @@ public class MessagingNodeList implements Event {
 
   @Override
   public String toString() {
-    return Integer.toString( this.type ) + " "
+    return "\n" + Integer.toString( this.type ) + " "
         + Integer.toString( this.numberPeers ) + " "
         + String.join( ",\n", peerInfo );
   }

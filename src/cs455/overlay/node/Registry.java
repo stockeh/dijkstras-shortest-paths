@@ -70,22 +70,44 @@ public class Registry implements Node {
   @SuppressWarnings( "resource" )
   private void interact() {
     LOG.info( "Input a command to interact with processes" );
+    Scanner scan = new Scanner( System.in );
     while ( true )
     {
-      Scanner scan = new Scanner( System.in );
-      switch ( scan.nextLine() )
+      String line = scan.nextLine();
+      String[] input = line.split( " " );
+      switch ( input[0] )
       {
         case SETUP_OVERLAY :
-          (new OverlayCreator()).setupOverlay(connections);
+        {
+          int connectingEdges = 1;
+          try
+          {
+            connectingEdges = Integer.parseInt( input[1] );
+          } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
+          {
+            LOG.error(
+                "Input did not contain a valid number of message connections. "
+                    + "Defaulting to each having" + connectingEdges + " link" );
+          }
+          try
+          {
+            (new OverlayCreator()).setupOverlay( connections, connectingEdges );
+          } catch ( Exception e )
+          {
+            LOG.error( e.getMessage() );
+          }
           break;
-          
+        }
         case LIST_MSG_NODES :
+        {
           LOG.info( "list-messaging-nodes" );
           break;
-
+        }
         default :
+        {
           LOG.info( "Not a valid command" );
           break;
+        }
       }
     }
   }
@@ -104,7 +126,7 @@ public class Registry implements Node {
 
       case Protocol.DEREGISTER_REQUEST :
         registrationHandler( event, connection, false );
-        break;        
+        break;
     }
   }
 
