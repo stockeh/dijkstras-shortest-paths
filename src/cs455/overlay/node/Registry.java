@@ -79,7 +79,7 @@ public class Registry implements Node {
       {
         case SETUP_OVERLAY :
         {
-          int connectingEdges = 1;
+          int connectingEdges = 2;
           try
           {
             connectingEdges = Integer.parseInt( input[1] );
@@ -87,7 +87,8 @@ public class Registry implements Node {
           {
             LOG.error(
                 "Input did not contain a valid number of message connections. "
-                    + "Defaulting to each having" + connectingEdges + " link" );
+                    + "Defaulting to each having " + connectingEdges
+                    + " links." );
           }
           try
           {
@@ -199,6 +200,7 @@ public class Registry implements Node {
       message =
           "The node, " + nodeDetails + " had not previously been registered. ";
     }
+    LOG.debug( "Connection IP: " + connectionIP );
     if ( !nodeDetails.split( ":" )[0].equals( connectionIP )
         && !connectionIP.equals( "127.0.0.1" ) )
     {
