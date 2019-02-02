@@ -5,11 +5,13 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.MessagingNodeList;
 import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
 
@@ -60,9 +62,10 @@ public class MessagingNode implements Node, Protocol {
     try ( ServerSocket serverSocket = new ServerSocket( 0 ) )
     {
       int nodePort = serverSocket.getLocalPort();
+      // TODO: check host address
+      // InetAddress.getLocalHost().getHostAddress()
       MessagingNode node = new MessagingNode(
-          InetAddress.getLocalHost().getHostAddress(), nodePort );
-
+        serverSocket.getInetAddress().getHostName(), nodePort );
       (new Thread( new TCPServerThread( node, serverSocket ) )).start();
       node.registerNode( args[0], Integer.valueOf( args[1] ) );
       node.interact();
@@ -89,6 +92,7 @@ public class MessagingNode implements Node, Protocol {
       Register register = new Register( Protocol.REGISTER_REQUEST,
           this.nodeHost, this.nodePort );
 
+      LOG.debug( "MessagingNode ID: " + this.nodeHost + ":" + this.nodePort );
       connection.getTCPSenderThread().sendData( register.getBytes() );
       connection.start();
 
@@ -157,5 +161,39 @@ public class MessagingNode implements Node, Protocol {
   @Override
   public void onEvent(Event event, TCPConnection connection) {
     LOG.debug( event.toString() );
+    switch ( event.getType() )
+    {
+      case Protocol.MESSAGING_NODE_LIST :
+        establishOverlayConnections( event );
+        break;
+    }
+  }
+
+  private void establishOverlayConnections(Event event) {
+    List<String> peers = (( MessagingNodeList ) event).getPeers();
+
+    for ( String peer : peers )
+    {
+      String[] info = peer.split( ":" );
+      Socket socketToTheServer = null;
+      try
+      {
+        socketToTheServer = new Socket( info[0], Integer.parseInt( info[1] ) );
+      } catch ( NumberFormatException | IOException e)
+      {
+        LOG.error( e.getMessage() );
+        e.printStackTrace();
+      }
+      try
+      {
+        TCPConnection connection = new TCPConnection( this, socketToTheServer );
+//        connection.getTCPSenderThread().sendData(  );
+//        connection.start();
+      } catch ( IOException e )
+      {
+        LOG.error( e.getMessage() );
+        e.printStackTrace();
+      }
+    }
   }
 }

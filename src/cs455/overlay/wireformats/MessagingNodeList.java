@@ -28,9 +28,9 @@ public class MessagingNodeList implements Event {
 
   private int type;
 
-  private int numberPeers;
+  private int numPeers;
 
-  private List<String> peerInfo;
+  private List<String> peers;
 
   /**
    * Constructor - Unmarshall the <code>byte[]</code> to the respective
@@ -47,16 +47,15 @@ public class MessagingNodeList implements Event {
 
     this.type = din.readInt();
 
-    this.numberPeers = din.readInt();
+    this.numPeers = din.readInt();
 
-    this.peerInfo = new ArrayList<String>( this.numberPeers );
-    for ( int i = 0; i < this.numberPeers; ++i )
+    this.peers = new ArrayList<String>( this.numPeers );
+    for ( int i = 0; i < this.numPeers; ++i )
     {
       int len = din.readInt();
       byte[] bytes = new byte[len];
       din.readFully( bytes );
-      LOG.error( new String( bytes ) );
-      this.peerInfo.add( new String( bytes ) );
+      this.peers.add( new String( bytes ) );
     }
 
     inputStream.close();
@@ -67,13 +66,13 @@ public class MessagingNodeList implements Event {
    * Default constructor - create a new messaging node list message.
    * 
    * @param type
-   * @param numberLinks
-   * @param linkInfo
+   * @param numPeers
+   * @param peers
    */
-  public MessagingNodeList(int type, int numberLinks, List<String> linkInfo) {
+  public MessagingNodeList(int type, int numPeers, List<String> peers) {
     this.type = type;
-    this.numberPeers = numberLinks;
-    this.peerInfo = linkInfo;
+    this.numPeers = numPeers;
+    this.peers = peers;
   }
 
   /**
@@ -84,6 +83,10 @@ public class MessagingNodeList implements Event {
     return type;
   }
 
+  public List<String> getPeers() {
+    return peers;
+  }
+  
   /**
    * {@inheritDoc}
    */
@@ -96,9 +99,9 @@ public class MessagingNodeList implements Event {
 
     dout.writeInt( type );
 
-    dout.writeInt( numberPeers );
+    dout.writeInt( numPeers );
 
-    for ( String item : peerInfo )
+    for ( String item : peers )
     {
       byte[] bytes = item.getBytes();
       dout.writeInt( bytes.length );
@@ -116,8 +119,8 @@ public class MessagingNodeList implements Event {
   @Override
   public String toString() {
     return "\n" + Integer.toString( this.type ) + " "
-        + Integer.toString( this.numberPeers ) + " "
-        + String.join( ",\n", peerInfo );
+        + Integer.toString( this.numPeers ) + " "
+        + String.join( ",\n", peers );
   }
 
 }
