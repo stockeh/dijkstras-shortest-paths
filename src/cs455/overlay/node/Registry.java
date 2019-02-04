@@ -11,6 +11,7 @@ import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.util.OverlayCreator;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
 import cs455.overlay.wireformats.RegisterResponse;
@@ -34,6 +35,10 @@ public class Registry implements Node {
   private static final String LIST_MSG_NODES = "list-messaging-nodes";
 
   private static final String SETUP_OVERLAY = "setup-overlay";
+
+  private static final String LIST_WEIGHTS = "list-weights";
+  
+  private LinkWeights linkWeights = null;
 
   /**
    * Stands-up the registry.
@@ -78,37 +83,27 @@ public class Registry implements Node {
       switch ( input[0] )
       {
         case SETUP_OVERLAY :
-        {
-          int connectingEdges = 2;
-          try
-          {
-            connectingEdges = Integer.parseInt( input[1] );
-          } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
-          {
-            LOG.error(
-                "Input did not contain a valid number of message connections. "
-                    + "Defaulting to each having " + connectingEdges
-                    + " links." );
-          }
-          try
-          {
-            (new OverlayCreator()).setupOverlay( connections, connectingEdges );
-          } catch ( Exception e )
-          {
-            LOG.error( e.getMessage() );
-          }
+          setupOverlay( input );
           break;
-        }
+        
         case LIST_MSG_NODES :
-        {
           LOG.info( "list-messaging-nodes" );
           break;
-        }
+        
+        case LIST_WEIGHTS :
+          if ( linkWeights != null )
+          {
+            LOG.info( linkWeights.toString() );
+          }
+          else
+          {
+            LOG.error( "The overlay has not yet been configured." );
+          }
+          break;
+          
         default :
-        {
           LOG.info( "Not a valid command" );
           break;
-        }
       }
     }
   }
@@ -200,7 +195,7 @@ public class Registry implements Node {
       message =
           "The node, " + nodeDetails + " had not previously been registered. ";
     }
-    LOG.debug( "Connection IP: " + connectionIP );
+    // TODO: Check IP LOG.debug( "Connection IP: " + connectionIP );
     if ( !nodeDetails.split( ":" )[0].equals( connectionIP )
         && !connectionIP.equals( "127.0.0.1" ) )
     {
@@ -211,4 +206,31 @@ public class Registry implements Node {
     return message;
   }
 
+  /**
+   * Setup the overlay for the messaging nodes. This is done by first
+   * creating the topology and sending the connections within the
+   * {@link OverlayCreator}. The link weights are returned by this class
+   * and sent to each messaging node in the overlay.
+   * 
+   * @param input The arguments passed by the command line interpreter
+   */
+  private void setupOverlay(String[] input) {
+    int connectingEdges = 2;
+    try
+    {
+      connectingEdges = Integer.parseInt( input[1] );
+    } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
+    {
+      LOG.error( "Input did not contain a valid number of message connections. "
+          + "Defaulting to each having " + connectingEdges + " links." );
+    }
+    try
+    {
+      this.linkWeights = (new OverlayCreator()).setupOverlay( connections, connectingEdges );
+    } catch ( Exception e )
+    {
+      LOG.error( e.getMessage() );
+    }
+
+  }
 }
