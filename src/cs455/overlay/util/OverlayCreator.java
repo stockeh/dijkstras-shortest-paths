@@ -5,9 +5,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.MessagingNodeList;
 import cs455.overlay.wireformats.Protocol;
 
+/**
+ * The network topology and connections are established for the
+ * overlay.
+ * 
+ * Each messaging node will get an event alluding to the topology
+ * connections and link weights between said connections.
+ * 
+ * @author stock
+ *
+ */
 public class OverlayCreator {
 
   /**
@@ -23,10 +34,11 @@ public class OverlayCreator {
    * @param connections all the connections for the messaging nodes
    * @param connectingEdges how many bidirectional connections should be
    *        made between each node.
+   * @return
    * @throws Exception throws an exception if the network conditions are
    *         not met.
    */
-  public void setupOverlay(Map<String, TCPConnection> connections,
+  public LinkWeights setupOverlay(Map<String, TCPConnection> connections,
       int connectingEdges) throws Exception {
     int totalConnections = connections.size();
     String insufficientError =
@@ -55,16 +67,22 @@ public class OverlayCreator {
     OverlayNode[] topology =
         buildTopology( connections, connectingEdges, totalConnections );
 
-    // Catch IOException ?
-    disperseConnections( topology );
+    LinkWeights linkWeights =
+        new LinkWeights( Protocol.LINK_WEIGHTS, topology );
+
+    // TODO: Catch IOException ?
+    disperseConnections( topology, linkWeights );
+
+    return linkWeights;
   }
 
   /**
+   * Construct the topology for the overlay for each connection
    * 
-   * 
-   * @param connections
-   * @param connectingEdges
-   * @param totalConnections
+   * @param connections the total messaging node connections
+   * @param connectingEdges the number of edges ( links ) to have
+   *        between each connection for a bidirectional graph
+   * @param totalConnections the total number of messaging nodes
    */
   private OverlayNode[] buildTopology(Map<String, TCPConnection> connections,
       int connectingEdges, int totalConnections) {
@@ -107,7 +125,7 @@ public class OverlayCreator {
 
     for ( int i = 0; i < totalConnections; i++ )
     {
-      LOG.info( topology[i].toString() );
+      LOG.debug( topology[i].toString() );
     }
     return topology;
   }
@@ -115,10 +133,13 @@ public class OverlayCreator {
   /**
    * Used to send out message to the messaging nodes
    * 
-   * @param connections
+   * @param topology the constructed topology as an array of
+   *        <code>OverlayNode</code>'s.
+   * @param linkWeights
    * @throws IOException
    */
-  private void disperseConnections(OverlayNode[] topology) throws IOException {
+  private void disperseConnections(OverlayNode[] topology,
+      LinkWeights linkWeights) throws IOException {
     for ( int i = 0; i < topology.length; i++ )
     {
       List<String> peers = topology[i].getPeers();
@@ -129,6 +150,9 @@ public class OverlayCreator {
 
       topology[i].getConnection().getTCPSenderThread()
           .sendData( message.getBytes() );
+
+      topology[i].getConnection().getTCPSenderThread()
+          .sendData( linkWeights.getBytes() );
     }
   }
 }

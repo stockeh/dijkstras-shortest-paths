@@ -64,6 +64,9 @@ public class EventFactory {
       case Protocol.MESSAGING_NODE_LIST :
         return new MessagingNodeList( marshalledBytes );
         
+      case Protocol.LINK_WEIGHTS :
+        return new LinkWeights( marshalledBytes );
+        
       default :
         LOG.error( "Event could not be created." );
         return null;

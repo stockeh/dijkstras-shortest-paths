@@ -6,6 +6,8 @@ import java.util.List;
 import cs455.overlay.transport.TCPConnection;
 
 /**
+ * Class to maintain a nodes properties while constructing the
+ * topology for the networks overlay.
  * 
  * @author stock
  *
@@ -22,6 +24,9 @@ public class OverlayNode {
 
   /**
    * 
+   * Default constructor - setup a new node to hold information about
+   * the messaging node list
+   * 
    * @param connection
    * @param self
    */
@@ -34,8 +39,9 @@ public class OverlayNode {
   }
 
   /**
+   * Fetch all the peers that one should connect to
    * 
-   * @return
+   * @return Returns the list of peers
    */
   public List<String> getPeers() {
     return peers;
@@ -43,19 +49,38 @@ public class OverlayNode {
 
   /**
    * 
-   * @param item
-   * @return
-   */
-  public boolean contains(String item) {
-    return neighbors.contains( item );
-  }
-  
-  /**
-   * 
-   * @return
+   * @return The connection associated with this node.
    */
   public TCPConnection getConnection() {
     return connection;
+  }
+
+  /**
+   * Self represents the host:port for this specific node instance
+   * 
+   * @return The host:port for this node
+   */
+  public String getSelf() {
+    return self;
+  }
+
+  /**
+   * 
+   * @return The number of peers this object has
+   */
+  public int numPeers() {
+    return this.peers.size();
+  }
+
+  /**
+   * Check if a new connection ( link ) should be made between two nodes
+   * by checking all of the neighbors incoming and outgoing.
+   * 
+   * @param item the item to search for
+   * @return True if the there is a link, false otherwise
+   */
+  public boolean contains(String item) {
+    return neighbors.contains( item );
   }
 
   /**
@@ -68,6 +93,8 @@ public class OverlayNode {
   }
 
   /**
+   * Add a new connection ( link ) to one self and update the neighbors
+   * for that node.
    * 
    * @param item
    */
@@ -86,7 +113,7 @@ public class OverlayNode {
   }
 
   /**
-   * 
+   * Convert this class, <code>OverlayNode</code> to a readable format
    */
   public String toString() {
     StringBuilder stringBuilder = new StringBuilder();

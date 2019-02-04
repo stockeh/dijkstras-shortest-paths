@@ -1,19 +1,25 @@
 package cs455.overlay.node;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
+import cs455.overlay.dijkstra.RoutingCache;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.LinkWeights;
+import cs455.overlay.wireformats.Message;
 import cs455.overlay.wireformats.MessagingNodeList;
 import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
+import cs455.overlay.wireformats.TaskInitiate;
 
 /**
  * Messaging nodes initiate and accept both communications and
@@ -34,13 +40,20 @@ public class MessagingNode implements Node, Protocol {
 
   private static final String EXIT_OVERLAY = "exit-overlay";
 
+  private static final String CONNECTIONS = "connections";
+
   private TCPConnection registryConnection;
+
+  private LinkWeights linkWeights = null;
+
+  private Map<String, TCPConnection> connections = new HashMap<>();
+
 
   private Integer nodePort;
 
   private String nodeHost;
 
-  public MessagingNode(String nodeHost, int nodePort) {
+  private MessagingNode(String nodeHost, int nodePort) {
     this.nodeHost = nodeHost;
     this.nodePort = nodePort;
   }
@@ -65,7 +78,7 @@ public class MessagingNode implements Node, Protocol {
       // TODO: check host address
       // InetAddress.getLocalHost().getHostAddress()
       MessagingNode node = new MessagingNode(
-        serverSocket.getInetAddress().getHostName(), nodePort );
+          serverSocket.getInetAddress().getHostName(), nodePort );
       (new Thread( new TCPServerThread( node, serverSocket ) )).start();
       node.registerNode( args[0], Integer.valueOf( args[1] ) );
       node.interact();
@@ -125,6 +138,13 @@ public class MessagingNode implements Node, Protocol {
           running = false;
           break;
 
+        case CONNECTIONS :
+          LOG.info( "this: " + nodeHost + ":" + nodePort );
+          for ( Entry<String, TCPConnection> mapEntry : connections.entrySet() )
+          {
+            LOG.info( mapEntry.getKey() );
+          }
+          break;
         default :
           LOG.info(
               "Not a valid command. USAGE: print-shortest-path | exit-overlay" );
@@ -166,29 +186,134 @@ public class MessagingNode implements Node, Protocol {
       case Protocol.MESSAGING_NODE_LIST :
         establishOverlayConnections( event );
         break;
+
+      case Protocol.REGISTER_REQUEST :
+        acknowledgeNewConnection( event, connection );
+        break;
+
+      case Protocol.LINK_WEIGHTS :
+        linkWeights = ( LinkWeights ) event;
+        LOG.info(
+            "Link weights are received and processed. Ready to send messages." );
+        break;
+
+      case Protocol.TASK_INITIATE :
+        taskInitiate( event );
+        break;
+
+      case Protocol.MESSAGE :
+        messageHandler( event );
+        break;
+
     }
   }
 
+  /**
+   * Establish a connection with other nodes in the topology as
+   * specified by the registry.
+   * 
+   * @param event
+   */
   private void establishOverlayConnections(Event event) {
     List<String> peers = (( MessagingNodeList ) event).getPeers();
 
     for ( String peer : peers )
     {
       String[] info = peer.split( ":" );
-      Socket socketToTheServer = null;
+      Socket socketToMessagingNode = null;
       try
       {
-        socketToTheServer = new Socket( info[0], Integer.parseInt( info[1] ) );
-      } catch ( NumberFormatException | IOException e)
+        socketToMessagingNode =
+            new Socket( info[0], Integer.parseInt( info[1] ) );
+      } catch ( NumberFormatException | IOException e )
+      {
+        LOG.error( e.getMessage() );
+        e.printStackTrace();
+        return;
+      }
+      try
+      {
+        TCPConnection connection =
+            new TCPConnection( this, socketToMessagingNode );
+        Register register = new Register( Protocol.REGISTER_REQUEST,
+            this.nodeHost, this.nodePort );
+        connection.getTCPSenderThread().sendData( register.getBytes() );
+        connection.start();
+        // Add "outgoing" connection to this.connections
+        connections.put( peer, connection );
+      } catch ( IOException e )
       {
         LOG.error( e.getMessage() );
         e.printStackTrace();
       }
+    }
+  }
+
+  /**
+   * Acknowledge "incoming" connections and add connection to
+   * this.connections. Allows for this to send bidirectional message.
+   * 
+   * @param event
+   * @param connection
+   */
+  private void acknowledgeNewConnection(Event event, TCPConnection connection) {
+    String nodeDetails = (( Register ) event).getConnection();
+    connections.put( nodeDetails, connection );
+  }
+
+  /**
+   * Begin sending messages to randomly chosen "sink" nodes for N
+   * rounds.
+   * 
+   * @param event
+   */
+  private void taskInitiate(Event event) {
+    int rounds = (( TaskInitiate ) event).getNumRounds();
+    // TODO: Create all the routes from this node to every other
+    RoutingCache routes = new RoutingCache();
+    for ( int i = 0; i < rounds; ++i )
+    {
+      int payload = 0;
+      int position = 0;
+      // TODO: Randomly select end point ( sink node ) and get the routing
+      // path
+      String[] routingPath = routes.getRoute();
+      TCPConnection connection = connections.get( routingPath[position] );
+      // Increment position for receiving node to handle
+      Message msg =
+          new Message( Protocol.MESSAGE, payload, ++position, routingPath );
       try
       {
-        TCPConnection connection = new TCPConnection( this, socketToTheServer );
-//        connection.getTCPSenderThread().sendData(  );
-//        connection.start();
+        connection.getTCPSenderThread().sendData( msg.getBytes() );
+      } catch ( IOException e )
+      {
+        LOG.error( e.getMessage() );
+        e.printStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Manage incoming messages by either forwarding the content, or
+   * receiving the message.
+   * 
+   * @param event
+   */
+  private void messageHandler(Event event) {
+    Message msg = ( Message ) event;
+    String[] routingPath = msg.getRoutingPath();
+    int position = msg.getPosition();
+
+    if ( routingPath.length == position )
+    {
+      // At Sink Node
+    } else
+    {
+      TCPConnection connection = connections.get( routingPath[position] );
+      msg.incrementPosition();
+      try
+      {
+        connection.getTCPSenderThread().sendData( msg.getBytes() );
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );

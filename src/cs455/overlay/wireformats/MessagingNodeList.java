@@ -9,7 +9,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import cs455.overlay.util.Logger;
 
 /**
  * Messaging Node List message type to provide a peer-list to the
@@ -20,16 +19,13 @@ import cs455.overlay.util.Logger;
  */
 public class MessagingNodeList implements Event {
 
-  /**
-   * Have the ability to log output INFO, DEBUG, ERROR configured by
-   * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
-   */
-  private static final Logger LOG = new Logger( true, true );
-
   private int type;
 
   private int numPeers;
 
+  /**
+   * host:port, host:port, ...
+   */
   private List<String> peers;
 
   /**
@@ -83,6 +79,10 @@ public class MessagingNodeList implements Event {
     return type;
   }
 
+  /**
+   * 
+   * @return The peers for this given node. May be empty or uninitialized.
+   */
   public List<String> getPeers() {
     return peers;
   }
@@ -120,7 +120,7 @@ public class MessagingNodeList implements Event {
   public String toString() {
     return "\n" + Integer.toString( this.type ) + " "
         + Integer.toString( this.numPeers ) + " "
-        + String.join( ",\n", peers );
+        + String.join( ", ", peers );
   }
 
 }
