@@ -31,6 +31,20 @@ public class ShortestPath {
     s.buildShortestPath( null, null, "0.0.0.0:63673" );
   }
 
+  /**
+   * Constructs the routes, from a given starting node, for the topology
+   * using dijkstras shortest path algorithm. The
+   * <code>Map<String, String[]> routes</code> object has an entry of
+   * the form <b>sink : [host:port, host:port, ...]</b>, where the value
+   * for the sink node defines the route from the parent self ( start ).
+   * 
+   * @param routes
+   * @param linkWeights Defines the connection and weights between each
+   *        link in the overlay.
+   * @param self Identifier for the parent self in the form
+   *        <b>host:port</b>. This will be the starting node to compute
+   *        the <code>routes</code>.
+   */
   public void buildShortestPath(Map<String, String[]> routes,
       LinkWeights linkWeights, String self) {
     String[] l =
@@ -94,7 +108,8 @@ public class ShortestPath {
 
   /**
    * Create the bidirectional graph from a source to destination with a
-   * weight.
+   * weight. These values will come from the weight list of connection
+   * link weight attributes.
    * 
    * @param source
    * @param destination
@@ -105,6 +120,12 @@ public class ShortestPath {
     graph[destination][source] = weight;
   }
 
+  /**
+   * 
+   * 
+   * @param startVertex
+   * @return
+   */
   public int[] dijkstra(int startVertex) {
     int nVertices = graph[0].length;
 
@@ -169,8 +190,37 @@ public class ShortestPath {
     return parents;
   }
 
-  // A utility function to print the constructed distances array and
-  // shortest paths
+  /**
+   * 
+   * 
+   * @param startVertex
+   * @param currentVertex
+   * @param parents
+   * @param transformer
+   * @param addresses
+   */
+  private void buildPath(int startVertex, int currentVertex, int[] parents,
+      List<String> transformer, List<String> addresses) {
+    if ( currentVertex == NO_PARENT )
+    {
+      return;
+    }
+    buildPath( startVertex, parents[currentVertex], parents, transformer,
+        addresses );
+    if ( currentVertex != startVertex )
+    {
+      addresses.add( transformer.get( currentVertex ) );
+    }
+  }
+
+  /**
+   * A utility function to print the constructed distances array and
+   * shortest paths.
+   * 
+   * @param startVertex
+   * @param distances
+   * @param parents
+   */
   private void printSolution(int startVertex, int[] distances, int[] parents) {
     int nVertices = distances.length;
     System.out.print( "Vertex\t\tDistance\tPath" );
@@ -188,8 +238,14 @@ public class ShortestPath {
     System.out.println();
   }
 
-  // Function to print shortest path from source to currentVertex using
-  // parents array
+  /**
+   * Function to print shortest path from source to currentVertex using
+   * parents array.
+   * 
+   * @param startVertex
+   * @param currentVertex
+   * @param parents
+   */
   private void printPath(int startVertex, int currentVertex, int[] parents) {
 
     // Base case : Source node has been processed
@@ -200,21 +256,6 @@ public class ShortestPath {
     printPath( startVertex, parents[currentVertex], parents );
     if ( currentVertex != startVertex )
     {
-      System.out.print( currentVertex + " " );
-    }
-  }
-
-  private void buildPath(int startVertex, int currentVertex, int[] parents,
-      List<String> transformer, List<String> addresses) {
-    if ( currentVertex == NO_PARENT )
-    {
-      return;
-    }
-    buildPath( startVertex, parents[currentVertex], parents, transformer,
-        addresses );
-    if ( currentVertex != startVertex )
-    {
-      addresses.add( transformer.get( currentVertex ) );
       System.out.print( currentVertex + " " );
     }
   }

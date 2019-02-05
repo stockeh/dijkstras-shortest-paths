@@ -3,6 +3,7 @@ package cs455.overlay.dijkstra;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.LinkWeights;
 
@@ -19,7 +20,9 @@ public class RoutingCache {
    */
   private static final Logger LOG = new Logger( true, true );
 
-  Map<String, String[]> routes;
+  private Map<String, String[]> routes;
+
+  private String self;
 
   /**
    * Default constructor - create the routes from this instance to every
@@ -29,7 +32,8 @@ public class RoutingCache {
    * @param self host:port of calling messaging node
    */
   public RoutingCache(LinkWeights linkWeights, String self) {
-    Map<String, String[]> routes = new HashMap<>();
+    this.self = self;
+    this.routes = new HashMap<>();
     (new ShortestPath()).buildShortestPath( routes, linkWeights, self );
     routes.forEach( (k, v) -> System.out
         .println( "\nEND : " + k + " PATH : " + Arrays.toString( v ) ) );
@@ -48,8 +52,30 @@ public class RoutingCache {
     return routes.get( sinkNode );
   }
 
-  @Override
-  public String toString() {
-    return "";
+  /**
+   * Each messaging node will hold its out routing cache. This method
+   * will assist in formatting the <code>routes</code> computed. the
+   * link weights are required to retrieve the original weights.
+   * 
+   * @param linkWeights Original connection links and weights provided
+   *        by the registry.
+   */
+  public void printShortestPath(LinkWeights linkWeights) {
+    System.out.println();
+    routes.forEach( (k, v) ->
+    {
+      StringBuilder sb = new StringBuilder();
+      String current = self;
+      sb.append( current );
+      for ( int i = 0; i < v.length; ++i )
+      {
+        String next = v[i];
+        sb.append( linkWeights.getWeight( current, next ) );
+        sb.append( next );
+        current = next;
+      }
+      System.out.println( sb.toString() );
+    } );
+    System.out.println();
   }
 }

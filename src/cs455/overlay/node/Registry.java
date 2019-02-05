@@ -2,6 +2,7 @@ package cs455.overlay.node;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +31,15 @@ public class Registry implements Node {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private static final Logger LOG = new Logger( true, true );
+  private static final Logger LOG = new Logger( true, false );
 
   private static Map<String, TCPConnection> connections = new HashMap<>();
 
   private static final String LIST_MSG_NODES = "list-messaging-nodes";
 
   private static final String SETUP_OVERLAY = "setup-overlay";
+
+  private static final String SEND_LINK_WEIGHTS = "send-overlay-link-weights";
 
   private static final String LIST_WEIGHTS = "list-weights";
 
@@ -82,7 +85,7 @@ public class Registry implements Node {
     Scanner scan = new Scanner( System.in );
     while ( true )
     {
-      String line = scan.nextLine();
+      String line = scan.nextLine().toLowerCase();
       String[] input = line.split( " " );
       switch ( input[0] )
       {
@@ -90,17 +93,32 @@ public class Registry implements Node {
           setupOverlay( input );
           break;
 
+        case SEND_LINK_WEIGHTS :
+          sendLinkWeights();
+          break;
+
         case LIST_MSG_NODES :
-          LOG.info( "list-messaging-nodes" );
+          if ( connections.size() == 0 )
+          {
+            LOG.error(
+                "There are no connections in the registry. Initialize new messaging nodes." );
+          } else
+          {
+            System.out.println(
+                "\nThere are " + connections.size() + " total links" );
+            connections.forEach( (k, v) -> System.out.println( k ) );
+            System.out.println();
+          }
           break;
 
         case LIST_WEIGHTS :
-          if ( linkWeights != null )
-          {
-            LOG.info( linkWeights.toString() );
-          } else
+          if ( linkWeights == null )
           {
             LOG.error( "The overlay has not yet been configured." );
+
+          } else
+          {
+            System.out.println( linkWeights.toString() );
           }
           break;
 
@@ -109,7 +127,7 @@ public class Registry implements Node {
           break;
 
         default :
-          LOG.info( "Not a valid command" );
+          LOG.error( "Unable to process. Please enter a valid command!" );
           break;
       }
     }
@@ -228,7 +246,7 @@ public class Registry implements Node {
       connectingEdges = Integer.parseInt( input[1] );
     } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
     {
-      LOG.error( "Input did not contain a valid number of message connections. "
+      LOG.info( "Input did not contain a valid number of message connections. "
           + "Defaulting to each having " + connectingEdges + " links." );
     }
     try
@@ -237,8 +255,43 @@ public class Registry implements Node {
           (new OverlayCreator()).setupOverlay( connections, connectingEdges );
     } catch ( Exception e )
     {
-      LOG.error( e.getMessage() );
+      LOG.error( e.getMessage()
+          + "\nUnable to send overlay information to connection." );
+      return;
     }
+    System.out.println( "\nOverlay configuration has been sent to the "
+        + connections.size() + " connections in the network.\n" );
+  }
+
+  /**
+   * Void method in charge of sending link weights to each of the
+   * connections in the overlay. It is expected that the overlay
+   * topology has been created prior with <i>setup-overlay N</i>.
+   * 
+   * Once received, the client will compute the routing cache for the
+   * topology from each given node.
+   */
+  private void sendLinkWeights() {
+    if ( linkWeights == null )
+    {
+      LOG.error(
+          "The overlay has not yet been configured, and there are no link wieghts" );
+      return;
+    }
+    connections.forEach( (k, v) ->
+    {
+      try
+      {
+        v.getTCPSenderThread().sendData( linkWeights.getBytes() );
+      } catch ( IOException e )
+      {
+        LOG.error(
+            e.getMessage() + "\nUnable to send link weights to connection." );
+        return;
+      }
+    } );
+    System.out.println( "\nOverlay Link Weights have been sent to the "
+        + connections.size() + " connections in the network.\n" );
   }
 
   /**
@@ -252,8 +305,9 @@ public class Registry implements Node {
    * place:
    * 
    * <ul>
-   * <li>Overlay topology is created</li>
-   * <li>Link weights are distributed</li>
+   * <li>Overlay topology is created: <i>setup-overlay N</i></li>
+   * <li>Link weights are distributed:
+   * <i>send-overlay-link-weights</i></li>
    * <li>Routing paths have been computed on the messaging nodes</li>
    * </ul>
    * 
@@ -266,20 +320,20 @@ public class Registry implements Node {
       rounds = Integer.parseInt( input[1] );
     } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
     {
-      LOG.error( "Input did not contain a valid number of rounds. "
+      LOG.info( "Input did not contain a valid number of rounds. "
           + "Defaulting to each having " + rounds + " rounds." );
     }
     TaskInitiate startTask = new TaskInitiate( Protocol.TASK_INITIATE, rounds );
-    for ( Entry<String, TCPConnection> entry : connections.entrySet() )
+    connections.forEach( (k, v) ->
     {
       try
       {
-        entry.getValue().getTCPSenderThread().sendData( startTask.getBytes() );
+        v.getTCPSenderThread().sendData( startTask.getBytes() );
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );
         // TODO: Return if unable to send to one connection?
       }
-    }
+    } );
   }
 }
