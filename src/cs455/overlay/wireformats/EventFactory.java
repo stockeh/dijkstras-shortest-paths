@@ -57,15 +57,18 @@ public class EventFactory {
 
       case Protocol.REGISTER_RESPONSE :
         return new RegisterResponse( marshalledBytes );
-        
+
       case Protocol.DEREGISTER_REQUEST :
         return new Register( marshalledBytes );
 
       case Protocol.MESSAGING_NODE_LIST :
         return new MessagingNodeList( marshalledBytes );
-        
+
       case Protocol.LINK_WEIGHTS :
         return new LinkWeights( marshalledBytes );
+
+      case Protocol.TASK_INITIATE :
+        return new TaskInitiate( marshalledBytes );
         
       default :
         LOG.error( "Event could not be created." );

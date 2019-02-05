@@ -8,6 +8,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+/**
+ * 
+ * @author stock
+ *
+ */
 public class TaskInitiate implements Event {
 
   int type;

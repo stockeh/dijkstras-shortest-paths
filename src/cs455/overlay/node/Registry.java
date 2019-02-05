@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Map.Entry;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
@@ -15,6 +16,7 @@ import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
 import cs455.overlay.wireformats.RegisterResponse;
+import cs455.overlay.wireformats.TaskInitiate;
 
 /**
  * Maintains information about the registered messaging nodes.
@@ -37,7 +39,9 @@ public class Registry implements Node {
   private static final String SETUP_OVERLAY = "setup-overlay";
 
   private static final String LIST_WEIGHTS = "list-weights";
-  
+
+  private static final String START = "start";
+
   private LinkWeights linkWeights = null;
 
   /**
@@ -85,22 +89,25 @@ public class Registry implements Node {
         case SETUP_OVERLAY :
           setupOverlay( input );
           break;
-        
+
         case LIST_MSG_NODES :
           LOG.info( "list-messaging-nodes" );
           break;
-        
+
         case LIST_WEIGHTS :
           if ( linkWeights != null )
           {
             LOG.info( linkWeights.toString() );
-          }
-          else
+          } else
           {
             LOG.error( "The overlay has not yet been configured." );
           }
           break;
-          
+
+        case START :
+          taskInitiate( input );
+          break;
+
         default :
           LOG.info( "Not a valid command" );
           break;
@@ -226,11 +233,53 @@ public class Registry implements Node {
     }
     try
     {
-      this.linkWeights = (new OverlayCreator()).setupOverlay( connections, connectingEdges );
+      this.linkWeights =
+          (new OverlayCreator()).setupOverlay( connections, connectingEdges );
     } catch ( Exception e )
     {
       LOG.error( e.getMessage() );
     }
+  }
 
+  /**
+   * Each node in the overlay will be responsible for sending N rounds
+   * of messages. The number of rounds is specified from the command
+   * line with the <b>start N</b> command. This method will send a
+   * message to each of the registered messaging nodes to start sending
+   * messages.
+   * 
+   * By the time this method is instantiated, the following have taken
+   * place:
+   * 
+   * <ul>
+   * <li>Overlay topology is created</li>
+   * <li>Link weights are distributed</li>
+   * <li>Routing paths have been computed on the messaging nodes</li>
+   * </ul>
+   * 
+   * @param input foreground command from scanner input.
+   */
+  private void taskInitiate(String[] input) {
+    int rounds = 1;
+    try
+    {
+      rounds = Integer.parseInt( input[1] );
+    } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
+    {
+      LOG.error( "Input did not contain a valid number of rounds. "
+          + "Defaulting to each having " + rounds + " rounds." );
+    }
+    TaskInitiate startTask = new TaskInitiate( Protocol.TASK_INITIATE, rounds );
+    for ( Entry<String, TCPConnection> entry : connections.entrySet() )
+    {
+      try
+      {
+        entry.getValue().getTCPSenderThread().sendData( startTask.getBytes() );
+      } catch ( IOException e )
+      {
+        LOG.error( e.getMessage() );
+        // TODO: Return if unable to send to one connection?
+      }
+    }
   }
 }

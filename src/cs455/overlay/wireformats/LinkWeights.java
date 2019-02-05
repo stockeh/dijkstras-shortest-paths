@@ -28,6 +28,10 @@ public class LinkWeights implements Event {
 
   private int numLinks;
 
+  /**
+   * <code>String</code> link format are of the form: <b>host:port
+   * host:port weight</b>
+   */
   private String[] links;
 
   /**
@@ -95,6 +99,18 @@ public class LinkWeights implements Event {
 
     inputStream.close();
     din.close();
+  }
+
+  /**
+   * {@link LinkWeights#links}
+   * @return The links between connections is returned
+   */
+  public String[] getLinks() {
+    return links;
+  }
+  
+  public int getNumLinks() {
+    return numLinks;
   }
 
   /**
