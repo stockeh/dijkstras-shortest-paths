@@ -1,6 +1,7 @@
 package cs455.overlay.dijkstra;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import cs455.overlay.util.Logger;
@@ -27,20 +28,20 @@ public class ShortestPath {
    */
   public static void main(String[] args) {
     ShortestPath s = new ShortestPath();
-    s.buildShortestPath( null, "0.0.0.0:63673" );
+    s.buildShortestPath( null, null, "0.0.0.0:63673" );
   }
 
-  public Map<String, String[]> buildShortestPath(LinkWeights linkWeights,
-      String self) {
-    String[] links =
+  public void buildShortestPath(Map<String, String[]> routes,
+      LinkWeights linkWeights, String self) {
+    String[] l =
         { "0.0.0.0:64596 0.0.0.0:64598 2", "0.0.0.0:64596 0.0.0.0:64600 2",
             "0.0.0.0:64596 0.0.0.0:64605 9", "0.0.0.0:64598 0.0.0.0:64600 6",
             "0.0.0.0:64598 0.0.0.0:64604 10", "0.0.0.0:64600 0.0.0.0:64605 10",
             "0.0.0.0:64605 0.0.0.0:64604 4", "0.0.0.0:64604 0.0.0.0:64594 5" };
     // ---
-    String start = "0.0.0.0:64596";
+    // String start = "0.0.0.0:64596";
     // ---
-
+    String[] links = linkWeights.getLinks();
     List<String> transformer = new ArrayList<>();
     transformLinks( transformer, links );
 
@@ -52,16 +53,20 @@ public class ShortestPath {
       addEdge( transformer.indexOf( splited[0] ),
           transformer.indexOf( splited[1] ), Integer.parseInt( splited[2] ) );
     }
-    int indexOfStart = transformer.indexOf( start );
+    int indexOfStart = transformer.indexOf( self );
     int[] parents = dijkstra( indexOfStart );
 
-    for ( int current = 1; current < numConnections; ++current )
+    for ( int current = 0; current < numConnections; ++current )
     {
-      System.out.println();
-      int seperator = 0;
-      buildPath( indexOfStart, current, parents, seperator );
+      if ( current != indexOfStart )
+      {
+        System.out.println();
+        List<String> addresses = new ArrayList<>();
+        buildPath( indexOfStart, current, parents, transformer, addresses );
+        routes.put( transformer.get( current ),
+            addresses.toArray( new String[] {} ) );
+      }
     }
-    return null;
   }
 
   /**
@@ -200,15 +205,16 @@ public class ShortestPath {
   }
 
   private void buildPath(int startVertex, int currentVertex, int[] parents,
-      int seperator) {
+      List<String> transformer, List<String> addresses) {
     if ( currentVertex == NO_PARENT )
     {
       return;
     }
-    ++seperator;
-    buildPath( startVertex, parents[currentVertex], parents, seperator );
+    buildPath( startVertex, parents[currentVertex], parents, transformer,
+        addresses );
     if ( currentVertex != startVertex )
     {
+      addresses.add( transformer.get( currentVertex ) );
       System.out.print( currentVertex + " " );
     }
   }

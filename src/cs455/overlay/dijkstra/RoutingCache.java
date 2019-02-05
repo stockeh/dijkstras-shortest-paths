@@ -29,8 +29,10 @@ public class RoutingCache {
    * @param self host:port of calling messaging node
    */
   public RoutingCache(LinkWeights linkWeights, String self) {
-    routes = (new ShortestPath()).buildShortestPath( linkWeights, self );
-    LOG.debug( Arrays.toString( routes.get( "A" ) ) );
+    Map<String, String[]> routes = new HashMap<>();
+    (new ShortestPath()).buildShortestPath( routes, linkWeights, self );
+    routes.forEach( (k, v) -> System.out
+        .println( "\nEND : " + k + " PATH : " + Arrays.toString( v ) ) );
   }
 
   /**
