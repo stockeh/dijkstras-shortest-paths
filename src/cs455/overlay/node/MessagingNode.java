@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Scanner;
 import cs455.overlay.dijkstra.RoutingCache;
 import cs455.overlay.transport.TCPConnection;
@@ -46,8 +47,9 @@ public class MessagingNode implements Node, Protocol {
 
   private LinkWeights linkWeights = null;
 
-  private Map<String, TCPConnection> connections = new HashMap<>();
+  private RoutingCache routes = null;
 
+  private Map<String, TCPConnection> connections = new HashMap<>();
 
   private Integer nodePort;
 
@@ -193,6 +195,7 @@ public class MessagingNode implements Node, Protocol {
 
       case Protocol.LINK_WEIGHTS :
         linkWeights = ( LinkWeights ) event;
+        routes = new RoutingCache( linkWeights, nodeHost + ":" + nodePort );
         LOG.info(
             "Link weights are received and processed. Ready to send messages." );
         break;
@@ -269,28 +272,25 @@ public class MessagingNode implements Node, Protocol {
    */
   private void taskInitiate(Event event) {
     int rounds = (( TaskInitiate ) event).getNumRounds();
-    // TODO: Create all the routes from this node to every other
-    RoutingCache routes = new RoutingCache();
-    for ( int i = 0; i < rounds; ++i )
-    {
-      int payload = 0;
-      int position = 0;
-      // TODO: Randomly select end point ( sink node ) and get the routing
-      // path
-      String[] routingPath = routes.getRoute();
-      TCPConnection connection = connections.get( routingPath[position] );
-      // Increment position for receiving node to handle
-      Message msg =
-          new Message( Protocol.MESSAGE, payload, ++position, routingPath );
-      try
-      {
-        connection.getTCPSenderThread().sendData( msg.getBytes() );
-      } catch ( IOException e )
-      {
-        LOG.error( e.getMessage() );
-        e.printStackTrace();
-      }
-    }
+    LOG.debug( routes.toString() );
+    /**
+     * TODO: RETURN TO THIS Random random = new Random(); for ( int i = 0;
+     * i < rounds; ++i ) { int payload = random.nextInt(); int position =
+     * 0; // TODO: Randomly select sink node and get the routing path //
+     * Get all the links, and then a random connection, and then split to
+     * // get the sink node for that connection String sinkNode =
+     * (linkWeights.getLinks())[random.nextInt( linkWeights.getNumLinks()
+     * )] .split( " " )[1]; try { String[] routingPath = routes.getRoute(
+     * sinkNode );
+     * 
+     * TCPConnection connection = connections.get( routingPath[position]
+     * ); // Increment position for receiving node to handle Message msg =
+     * new Message( Protocol.MESSAGE, payload, ++position, routingPath );
+     * 
+     * connection.getTCPSenderThread().sendData( msg.getBytes() ); } catch
+     * ( NullPointerException | ClassCastException | IOException e ) {
+     * LOG.error( e.getMessage() ); } }
+     */
   }
 
   /**

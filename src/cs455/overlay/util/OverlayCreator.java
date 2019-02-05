@@ -91,12 +91,12 @@ public class OverlayCreator {
     OverlayNode[] topology = new OverlayNode[totalConnections];
 
     int index = 0;
-    for ( Entry<String, TCPConnection> mapEntry : connections.entrySet() )
+    for ( Entry<String, TCPConnection> entry : connections.entrySet() )
     {
-      String address = mapEntry.getKey();
+      String address = entry.getKey();
       addresses[index] = address;
 
-      topology[index] = new OverlayNode( mapEntry.getValue(), address );
+      topology[index] = new OverlayNode( entry.getValue(), address );
 
       ++index;
       // May be able to add A<-B<-C<-D here
