@@ -132,6 +132,7 @@ public class MessagingNode implements Node, Protocol {
       switch ( scan.nextLine().toLowerCase() )
       {
         case PRINT_SHORTEST_PATH :
+          printShortestPath();
           break;
 
         case EXIT_OVERLAY :
@@ -316,6 +317,30 @@ public class MessagingNode implements Node, Protocol {
       {
         LOG.error( e.getMessage() );
         e.printStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Print the shortest path as computed by Dijkstras shortest path
+   * algorithm for this node.
+   * 
+   * This is only possible <b>once</b> the overlay has been setup,
+   * weights are distributed, and the routing cache is created.
+   */
+  private void printShortestPath() {
+    if ( routes == null )
+    {
+      LOG.error( "Link weights have not yet been received from registry."
+          + "Unable to display the shortest paths." );
+    } else
+    {
+      try
+      {
+        routes.printShortestPath( linkWeights );
+      } catch ( Exception e )
+      {
+        LOG.error( e.getMessage() + " : Unable to display shortest path." );
       }
     }
   }

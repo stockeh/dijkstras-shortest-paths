@@ -103,12 +103,13 @@ public class LinkWeights implements Event {
 
   /**
    * {@link LinkWeights#links}
+   * 
    * @return The links between connections is returned
    */
   public String[] getLinks() {
     return links;
   }
-  
+
   public int getNumLinks() {
     return numLinks;
   }
@@ -165,5 +166,36 @@ public class LinkWeights implements Event {
     String msg =
         "\nThere are " + Integer.toString( numLinks ) + " total links\n";
     return msg + stringBuilder.toString();
+  }
+
+  /**
+   * Retrieve the weight for a bidirectional link given some current and
+   * next node. It is assumed that <code>current</code> and
+   * <code>next</code> connections are valid in the links.
+   * 
+   * @param current
+   * @param next
+   * @return A string will be returned containing the weight for the
+   *         that connection in the <code>String</code> format:
+   *         <code>--##--</code>.
+   */
+  public String getWeight(String current, String next) {
+    StringBuilder sb = new StringBuilder();
+
+    for ( int i = 0; i < links.length; ++i )
+    {
+      String link = links[i];
+      if ( link.contains( current ) && link.contains( next ) )
+      {
+        // retrieve the weight for that connection and pad a leading 0
+        int weight = Integer.parseInt( link.split( "\\s+" )[2] );
+        sb.append( "--" );
+        sb.append( String.format( "%02d", weight ) );
+        sb.append( "--" );
+        break;
+      }
+    }
+
+    return sb.toString();
   }
 }
