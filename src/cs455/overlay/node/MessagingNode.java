@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Scanner;
 import cs455.overlay.dijkstra.RoutingCache;
@@ -35,7 +34,7 @@ public class MessagingNode implements Node, Protocol {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private static final Logger LOG = new Logger( true, true );
+  private static final Logger LOG = new Logger( true, false );
 
   private static final String PRINT_SHORTEST_PATH = "print-shortest-path";
 
@@ -130,7 +129,7 @@ public class MessagingNode implements Node, Protocol {
     while ( running )
     {
       Scanner scan = new Scanner( System.in );
-      switch ( scan.nextLine() )
+      switch ( scan.nextLine().toLowerCase() )
       {
         case PRINT_SHORTEST_PATH :
           break;
@@ -141,11 +140,10 @@ public class MessagingNode implements Node, Protocol {
           break;
 
         case CONNECTIONS :
-          LOG.info( "this: " + nodeHost + ":" + nodePort );
-          for ( Entry<String, TCPConnection> mapEntry : connections.entrySet() )
-          {
-            LOG.info( mapEntry.getKey() );
-          }
+          System.out
+              .println( "\nthis connections - " + nodeHost + ":" + nodePort );
+          connections.forEach( (k, v) -> System.out.println( k ) );
+          System.out.println();
           break;
         default :
           LOG.info(

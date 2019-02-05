@@ -25,7 +25,7 @@ public class OverlayCreator {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private static final Logger LOG = new Logger( true, true );
+  private static final Logger LOG = new Logger( true, false );
 
   /**
    * Start point for setting up the overlay for the network. Verifies
@@ -71,7 +71,7 @@ public class OverlayCreator {
         new LinkWeights( Protocol.LINK_WEIGHTS, topology );
 
     // TODO: Catch IOException ?
-    disperseConnections( topology, linkWeights );
+    disperseConnections( topology );
 
     return linkWeights;
   }
@@ -135,11 +135,9 @@ public class OverlayCreator {
    * 
    * @param topology the constructed topology as an array of
    *        <code>OverlayNode</code>'s.
-   * @param linkWeights
    * @throws IOException
    */
-  private void disperseConnections(OverlayNode[] topology,
-      LinkWeights linkWeights) throws IOException {
+  private void disperseConnections(OverlayNode[] topology) throws IOException {
     for ( int i = 0; i < topology.length; i++ )
     {
       List<String> peers = topology[i].getPeers();
@@ -150,9 +148,6 @@ public class OverlayCreator {
 
       topology[i].getConnection().getTCPSenderThread()
           .sendData( message.getBytes() );
-
-      topology[i].getConnection().getTCPSenderThread()
-          .sendData( linkWeights.getBytes() );
     }
   }
 }
