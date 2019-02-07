@@ -15,24 +15,27 @@ import java.util.Arrays;
  * 
  * The message will be of the following format:
  * 
- *     - Message Type : ( this ) Message
- *     - Payload      : ( negative ) 2147483648 to 2147483647
- *     - Position     : index of connection in the routing path
- *     - Routing Path : array of connections, host:port, host:port, etc.
+ * <ul>
+ * <li>Message Type : ( this ) Message</li>
+ * <li>Payload : ( negative ) 2147483648 to 2147483647</li>
+ * <li>Position : index of connection in the routing path</li>
+ * <li>Routing Path : array of connections, host:port, host:port,
+ * etc.</li>
+ * </ul>
  * 
  * @author stock
  *
  */
 public class Message implements Event {
-  
+
   private int type;
-  
+
   private int payload;
-  
+
   private int position;
-  
+
   private String[] routingPath;
-  
+
   /**
    * Default constructor - create a new message to send between nodes.
    * 
@@ -47,7 +50,7 @@ public class Message implements Event {
     this.position = position;
     this.routingPath = routingPath;
   }
- 
+
   /**
    * Constructor - Unmarshall the <code>byte[]</code> to the respective
    * class elements.
@@ -64,11 +67,11 @@ public class Message implements Event {
     this.type = din.readInt();
 
     this.payload = din.readInt();
-    
+
     this.position = din.readInt();
 
     int arrayLength = din.readInt();
-    
+
     this.routingPath = new String[arrayLength];
 
     for ( int i = 0; i < arrayLength; ++i )
@@ -76,31 +79,32 @@ public class Message implements Event {
       int len = din.readInt();
       byte[] bytes = new byte[len];
       din.readFully( bytes );
-      this.routingPath[i] = ( new String( bytes ) );
+      this.routingPath[i] = (new String( bytes ));
     }
 
     inputStream.close();
     din.close();
   }
-  
+
   /**
    * Increment the position for the next connection
    */
   public void incrementPosition() {
     ++position;
   }
-  
+
   public int getPayload() {
     return payload;
   }
-  
+
   public int getPosition() {
     return position;
   }
-  
+
   public String[] getRoutingPath() {
     return routingPath;
   }
+
   /**
    * {@inheritDoc}
    */
@@ -108,7 +112,7 @@ public class Message implements Event {
   public int getType() {
     return type;
   }
-  
+
   /**
    * {@inheritDoc}
    */
@@ -122,11 +126,11 @@ public class Message implements Event {
     dout.writeInt( type );
 
     dout.writeInt( payload );
-    
+
     dout.writeInt( position );
 
     dout.writeInt( routingPath.length );
-    
+
     for ( String item : routingPath )
     {
       byte[] bytes = item.getBytes();
@@ -141,7 +145,7 @@ public class Message implements Event {
     dout.close();
     return marshalledBytes;
   }
-  
+
   @Override
   public String toString() {
     return "\n" + Integer.toString( this.type ) + " "
@@ -149,5 +153,5 @@ public class Message implements Event {
         + Integer.toString( this.position ) + " "
         + Arrays.toString( routingPath );
   }
-  
+
 }

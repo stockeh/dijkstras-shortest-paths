@@ -69,9 +69,22 @@ public class EventFactory {
 
       case Protocol.TASK_INITIATE :
         return new TaskInitiate( marshalledBytes );
-        
+
+      case Protocol.MESSAGE :
+        return new Message( marshalledBytes );
+
+      case Protocol.TASK_COMPLETE :
+        return new TaskComplete( marshalledBytes );
+
+      case Protocol.PULL_TRAFFIC_SUMMARY :
+        return new TaskSummaryRequest( marshalledBytes );
+
+      case Protocol.TRAFFIC_SUMMARY :
+        return new TaskSummaryResponse( marshalledBytes );
+
       default :
-        LOG.error( "Event could not be created." );
+        LOG.error( "Event could not be created. "
+            + ByteBuffer.wrap( marshalledBytes ).getInt() );
         return null;
     }
   }
