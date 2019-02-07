@@ -2,12 +2,13 @@ package cs455.overlay.node;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
@@ -18,6 +19,8 @@ import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
 import cs455.overlay.wireformats.RegisterResponse;
 import cs455.overlay.wireformats.TaskInitiate;
+import cs455.overlay.wireformats.TaskSummaryRequest;
+import cs455.overlay.wireformats.TaskSummaryResponse;
 
 /**
  * Maintains information about the registered messaging nodes.
@@ -46,6 +49,10 @@ public class Registry implements Node {
   private static final String START = "start";
 
   private LinkWeights linkWeights = null;
+
+  private int receivedCompletedTasks = 0;
+
+  private List<TaskSummaryResponse> statisticsSummary = new ArrayList<>();
 
   /**
    * Stands-up the registry.
@@ -147,6 +154,14 @@ public class Registry implements Node {
 
       case Protocol.DEREGISTER_REQUEST :
         registrationHandler( event, connection, false );
+        break;
+
+      case Protocol.TASK_COMPLETE :
+        completedTaskHandler();
+        break;
+
+      case Protocol.TRAFFIC_SUMMARY :
+        trafficResonseHandler( event );
         break;
     }
   }
@@ -335,5 +350,85 @@ public class Registry implements Node {
         // TODO: Return if unable to send to one connection?
       }
     } );
+  }
+
+  /**
+   * TODO: It be better to verify the connections that are received by
+   * host:port identifier. Then if there is a specific node missing, it
+   * can be handled more seriously.
+   * 
+   * Increment for every received completed task and compare with the
+   * total number in the registry. If all tasks have <i>completed</i>
+   * then wait for a few seconds, to ensure all transit messages are
+   * delivered. Then request to pull a traffic summary.
+   * 
+   * @param event
+   */
+  private synchronized void completedTaskHandler() {
+    LOG.debug( "TASK HANDLER: " + Integer.toString( receivedCompletedTasks )
+        + " , " + Integer.toString( connections.size() ) );
+    if ( ++receivedCompletedTasks == connections.size() )
+    {
+      try
+      {
+        // TODO: Sleep for 15 seconds.
+        TimeUnit.SECONDS.sleep( 1 );
+      } catch ( InterruptedException e )
+      {
+        LOG.error( "Unable to sleep thread: " + e.getMessage() );
+      }
+      connections.forEach( (k, connection) ->
+      {
+        TaskSummaryRequest request = new TaskSummaryRequest();
+        try
+        {
+          connection.getTCPSenderThread().sendData( request.getBytes() );
+        } catch ( IOException e )
+        {
+          LOG.error(
+              e.getMessage() + "\nUnable to send link weights to connection." );
+          return;
+        }
+      } );
+      receivedCompletedTasks = 0;
+    }
+  }
+
+  /**
+   * Display the statistics from the messaging nodes after the start
+   * task initiation has occurred, i.e., messages were transfered
+   * amongst the overlay.
+   * 
+   * @param event
+   */
+  private synchronized void trafficResonseHandler(Event event) {
+    statisticsSummary.add( ( TaskSummaryResponse ) event );
+    LOG.debug( "TRAFFIC HANDLE: " + Integer.toString( statisticsSummary.size() )
+        + " , " + Integer.toString( connections.size() ) );
+    if ( statisticsSummary.size() == connections.size() )
+    {
+      int totalSent = 0;
+      int totalReceived = 0;
+      long totalSentSummation = 0;
+      long totalReceivedSummation = 0;
+
+      System.out.println(
+          String.format( "\n%1$15s %2$10s %3$10s %4$15s %5$15s %6$10s", "",
+              "Sent", "Received", "Sigma Sent", "Sigma Received", "Relayed" ) );
+      for ( TaskSummaryResponse summary : statisticsSummary )
+      {
+        System.out.println( summary.toString() );
+        totalSent += summary.getSendTracker();
+        totalReceived += summary.getReceiveTracker();
+        totalSentSummation += summary.getSendSummation();
+        totalReceivedSummation += summary.getReceiveSummation();
+      }
+      System.out.println(
+          String.format( "%1$15s %2$10s %3$10s %4$15s %5$15s\n", "Total Sum:",
+              Integer.toString( totalSent ), Integer.toString( totalReceived ),
+              Long.toString( totalSentSummation ),
+              Long.toString( totalReceivedSummation ) ) );
+      statisticsSummary.clear();
+    }
   }
 }

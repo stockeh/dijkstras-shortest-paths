@@ -1,10 +1,7 @@
 package cs455.overlay.dijkstra;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.LinkWeights;
 
 /**
@@ -14,15 +11,12 @@ import cs455.overlay.wireformats.LinkWeights;
  */
 public class RoutingCache {
 
-  /**
-   * Have the ability to log output INFO, DEBUG, ERROR configured by
-   * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
-   */
-  private static final Logger LOG = new Logger( true, true );
-
   private Map<String, String[]> routes;
 
   private String self;
+
+  // List of total connections in the overlay
+  private String[] connections;
 
   /**
    * Default constructor - create the routes from this instance to every
@@ -35,8 +29,7 @@ public class RoutingCache {
     this.self = self;
     this.routes = new HashMap<>();
     (new ShortestPath()).buildShortestPath( routes, linkWeights, self );
-    routes.forEach( (k, v) -> System.out
-        .println( "\nEND : " + k + " PATH : " + Arrays.toString( v ) ) );
+    this.connections = routes.keySet().toArray( new String[routes.size()] );
   }
 
   /**
@@ -50,6 +43,28 @@ public class RoutingCache {
   public String[] getRoute(String sinkNode)
       throws NullPointerException, ClassCastException {
     return routes.get( sinkNode );
+  }
+
+  /**
+   * Provided an index, an identifier for another messaging node in the
+   * network will be returned. This is constructed after the routes have
+   * been built to every node.
+   * 
+   * @param index of the item to retrieve
+   * @return A <code>String</code> of the identifier
+   */
+  public String getConnection(int index)
+      throws ArrayIndexOutOfBoundsException, NullPointerException {
+    return connections[index];
+  }
+
+  /**
+   * Retrieve the total number of connections in the overlay
+   * 
+   * @return An integer of the total number of connections.
+   */
+  public int numConnection() throws NullPointerException {
+    return connections.length;
   }
 
   /**

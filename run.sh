@@ -7,7 +7,7 @@
 
 PORT=5001
 HOST=localhost
-MULTI="1 2 3 4 5"
+MULTI="1 2 3 4 5 6 7 8 9"
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 BUILD="$DIR/build/classes/java/main"

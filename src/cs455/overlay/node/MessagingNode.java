@@ -3,6 +3,7 @@ package cs455.overlay.node;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,9 @@ import cs455.overlay.wireformats.Message;
 import cs455.overlay.wireformats.MessagingNodeList;
 import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
+import cs455.overlay.wireformats.TaskComplete;
 import cs455.overlay.wireformats.TaskInitiate;
+import cs455.overlay.wireformats.TaskSummaryResponse;
 
 /**
  * Messaging nodes initiate and accept both communications and
@@ -54,6 +57,27 @@ public class MessagingNode implements Node, Protocol {
 
   private String nodeHost;
 
+  /**
+   * Messaging Node Statistics
+   */
+  private int sendTracker = 0;
+
+  private int receiveTracker = 0;
+
+  private int relayTracker = 0;
+
+  private long sendSummation = 0;
+
+  private long receiveSummation = 0;
+
+  /**
+   * Default constructor - creates a new messaging node tying the
+   * <b>host:port</b> combination for the node as the identifier for
+   * itself.
+   * 
+   * @param nodeHost
+   * @param nodePort
+   */
   private MessagingNode(String nodeHost, int nodePort) {
     this.nodeHost = nodeHost;
     this.nodePort = nodePort;
@@ -93,9 +117,8 @@ public class MessagingNode implements Node, Protocol {
   /**
    * Registers a node with the registry.
    *
-   * @param host
-   * @param port
-   * @return
+   * @param host identifier for the registry node.
+   * @param port number for the registry node
    */
   private void registerNode(String registryHost, Integer registryPort) {
     try
@@ -106,7 +129,8 @@ public class MessagingNode implements Node, Protocol {
       Register register = new Register( Protocol.REGISTER_REQUEST,
           this.nodeHost, this.nodePort );
 
-      LOG.debug( "MessagingNode ID: " + this.nodeHost + ":" + this.nodePort );
+      LOG.info(
+          "MessagingNode Identifier: " + this.nodeHost + ":" + this.nodePort );
       connection.getTCPSenderThread().sendData( register.getBytes() );
       connection.start();
 
@@ -155,8 +179,10 @@ public class MessagingNode implements Node, Protocol {
   }
 
   /**
-   * Remove the node from the registry. TODO: Do I close the socket
-   * here? Current exceptions.
+   * Remove the node from the registry. This must occur prior to setting
+   * up the overlay on the registry.
+   * 
+   * TODO: Do I close the socket here? Current exceptions.
    */
   private void exitOverlay() {
     LOG.debug( "HOST:PORT " + this.nodeHost + ":"
@@ -207,6 +233,9 @@ public class MessagingNode implements Node, Protocol {
         messageHandler( event );
         break;
 
+      case Protocol.PULL_TRAFFIC_SUMMARY :
+        sendTrafficSummary();
+        break;
     }
   }
 
@@ -258,61 +287,104 @@ public class MessagingNode implements Node, Protocol {
    * @param event
    * @param connection
    */
-  private void acknowledgeNewConnection(Event event, TCPConnection connection) {
+  private synchronized void acknowledgeNewConnection(Event event, TCPConnection connection) {
     String nodeDetails = (( Register ) event).getConnection();
     connections.put( nodeDetails, connection );
   }
 
   /**
-   * Begin sending messages to randomly chosen "sink" nodes for N
-   * rounds.
+   * Begin sending messages to randomly chosen <i>sink</i> nodes for N
+   * rounds. The statistics for this node begin to populate here as the
+   * following:
    * 
-   * @param event
+   * <ul>
+   * <li>sendSummation: summation of the <i>random</i> sent payload</li>
+   * <li>sendTracker: the number of messages that were <b>sent</b></li>
+   * </ul>
+   * 
+   * Once a node has finished sending messages for all the rounds, a
+   * task completion message is send back to the registry.
+   * 
+   * @param event received to retrieve the number of sending rounds
+   * 
    */
   private void taskInitiate(Event event) {
     int rounds = (( TaskInitiate ) event).getNumRounds();
-    LOG.debug( routes.toString() );
-    /**
-     * TODO: RETURN TO THIS Random random = new Random(); for ( int i = 0;
-     * i < rounds; ++i ) { int payload = random.nextInt(); int position =
-     * 0; // TODO: Randomly select sink node and get the routing path //
-     * Get all the links, and then a random connection, and then split to
-     * // get the sink node for that connection String sinkNode =
-     * (linkWeights.getLinks())[random.nextInt( linkWeights.getNumLinks()
-     * )] .split( " " )[1]; try { String[] routingPath = routes.getRoute(
-     * sinkNode );
-     * 
-     * TCPConnection connection = connections.get( routingPath[position]
-     * ); // Increment position for receiving node to handle Message msg =
-     * new Message( Protocol.MESSAGE, payload, ++position, routingPath );
-     * 
-     * connection.getTCPSenderThread().sendData( msg.getBytes() ); } catch
-     * ( NullPointerException | ClassCastException | IOException e ) {
-     * LOG.error( e.getMessage() ); } }
-     */
+    
+    Random random = new Random();
+    for ( int i = 0; i < rounds; ++i )
+    {
+      int payload = random.nextInt();
+      this.sendSummation += payload;
+      int position = 0;
+      try
+      {
+        String sinkNode =
+            routes.getConnection( random.nextInt( routes.numConnection() ) );
+        String[] routingPath = routes.getRoute( sinkNode );
+        LOG.debug( "New Route to: " + Arrays.toString( routingPath ) );
+        TCPConnection connection = connections.get( routingPath[position] );
+        Message msg =
+            new Message( Protocol.MESSAGE, payload, ++position, routingPath );
+
+        // TODO: java.nio.BufferUnderflowException starts here... 
+        connection.getTCPSenderThread().sendData( msg.getBytes() );
+        ++this.sendTracker;
+      } catch ( ArrayIndexOutOfBoundsException | NullPointerException
+          | ClassCastException | IOException e )
+      {
+        LOG.error( e.getMessage() );
+      }
+    }
+
+    TaskComplete complete =
+        new TaskComplete( Protocol.TASK_COMPLETE, nodeHost, nodePort );
+    try
+    {
+      registryConnection.getTCPSenderThread().sendData( complete.getBytes() );
+    } catch ( IOException e )
+    {
+      LOG.error(
+          "Unable to inform registry of task completion. " + e.getMessage() );
+    }
+
   }
 
   /**
    * Manage incoming messages by either forwarding the content, or
-   * receiving the message.
+   * receiving the message. The statistics for this node are updated as
+   * new messages arrive as the following:
    * 
-   * @param event
+   * <ul>
+   * <li>receiveSummation: summation of the <i>random</i> received
+   * payload</li>
+   * <li>receiveTracker: the number of messages that are
+   * <b>received</b></li>
+   * <li>relayTracker: the number of messages that are
+   * <b>forwarded</b></li>
+   * </ul>
+   * 
+   * @param event received to retrieve the message
    */
-  private void messageHandler(Event event) {
+  private synchronized void messageHandler(Event event) {
     Message msg = ( Message ) event;
     String[] routingPath = msg.getRoutingPath();
     int position = msg.getPosition();
 
     if ( routingPath.length == position )
     {
-      // At Sink Node
+      LOG.debug( "RECEIVED" );
+      ++this.receiveTracker;
+      this.receiveSummation += msg.getPayload();
     } else
     {
       TCPConnection connection = connections.get( routingPath[position] );
       msg.incrementPosition();
       try
       {
+        LOG.debug( "FORWARDING to: " + routingPath[position] );
         connection.getTCPSenderThread().sendData( msg.getBytes() );
+        ++this.relayTracker;
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );
@@ -343,5 +415,29 @@ public class MessagingNode implements Node, Protocol {
         LOG.error( e.getMessage() + " : Unable to display shortest path." );
       }
     }
+  }
+
+  /**
+   * Upon receiving a request for the traffic summary from the registry,
+   * this node will respond with the messaging statistics and reset all
+   * associated counters.
+   */
+  private void sendTrafficSummary() {
+    TaskSummaryResponse response =
+        new TaskSummaryResponse( nodeHost, nodePort, sendTracker, sendSummation,
+            receiveTracker, receiveSummation, relayTracker );
+
+    try
+    {
+      registryConnection.getTCPSenderThread().sendData( response.getBytes() );
+    } catch ( IOException e )
+    {
+      LOG.error( "Unable to send traffic summary response. " + e.getMessage() );
+    }
+    this.sendTracker = 0;
+    this.receiveTracker = 0;
+    this.relayTracker = 0;
+    this.sendSummation = 0;
+    this.receiveSummation = 0;
   }
 }

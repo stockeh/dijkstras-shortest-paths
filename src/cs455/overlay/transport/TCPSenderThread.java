@@ -17,7 +17,7 @@ public class TCPSenderThread {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private final static Logger LOG = new Logger( true, true );
+  private final static Logger LOG = new Logger( true, false );
 
   private Socket socket;
 
@@ -44,8 +44,8 @@ public class TCPSenderThread {
    * @param data
    * @throws IOException
    */
-  public void sendData(final byte[] data) throws IOException {
-//    LOG.debug( "Sending message to: " + socket.getRemoteSocketAddress() );
+  public synchronized void sendData(final byte[] data) throws IOException {
+    LOG.debug( "Sending message to: " + socket.getRemoteSocketAddress() );
     int len = data.length;
     dout.writeInt( len );
     dout.write( data, 0, len );

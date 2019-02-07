@@ -1,7 +1,6 @@
 package cs455.overlay.dijkstra;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import cs455.overlay.util.Logger;
@@ -47,14 +46,6 @@ public class ShortestPath {
    */
   public void buildShortestPath(Map<String, String[]> routes,
       LinkWeights linkWeights, String self) {
-    String[] l =
-        { "0.0.0.0:64596 0.0.0.0:64598 2", "0.0.0.0:64596 0.0.0.0:64600 2",
-            "0.0.0.0:64596 0.0.0.0:64605 9", "0.0.0.0:64598 0.0.0.0:64600 6",
-            "0.0.0.0:64598 0.0.0.0:64604 10", "0.0.0.0:64600 0.0.0.0:64605 10",
-            "0.0.0.0:64605 0.0.0.0:64604 4", "0.0.0.0:64604 0.0.0.0:64594 5" };
-    // ---
-    // String start = "0.0.0.0:64596";
-    // ---
     String[] links = linkWeights.getLinks();
     List<String> transformer = new ArrayList<>();
     transformLinks( transformer, links );
@@ -74,7 +65,6 @@ public class ShortestPath {
     {
       if ( current != indexOfStart )
       {
-        System.out.println();
         List<String> addresses = new ArrayList<>();
         buildPath( indexOfStart, current, parents, transformer, addresses );
         routes.put( transformer.get( current ),
@@ -186,7 +176,7 @@ public class ShortestPath {
       }
     }
 
-    printSolution( startVertex, shortestDistances, parents );
+    // printSolution( startVertex, shortestDistances, parents );
     return parents;
   }
 
