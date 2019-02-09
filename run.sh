@@ -7,7 +7,7 @@
 
 PORT=5001
 HOST=localhost
-MULTI="1 2 3 4 5 6 7 8 9"
+MULTI="1 2 3 4 5 6 7"
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 BUILD="$DIR/build/classes/java/main"
@@ -29,7 +29,7 @@ LINES=`find . -name "*.java" -print | xargs wc -l | grep "total" | awk '{$1=$1};
     gradle clean
     gradle build
     open -a Terminal .
-    cd $DIR/src; java -cp $BUILD cs455.overlay.node.Registry $PORT
+    cd $DIR/src; java cs455.overlay.node.Registry $PORT
 else
     if [ -n "$MULTI" ]
     then
@@ -38,5 +38,6 @@ else
             new_tab
         done
     fi
-    cd $DIR/src; java -cp $BUILD cs455.overlay.node.MessagingNode $HOST $PORT;
+# java -cp $BUILD ...
+    cd $DIR/src; java cs455.overlay.node.MessagingNode $HOST $PORT;
 fi

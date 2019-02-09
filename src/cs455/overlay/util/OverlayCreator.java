@@ -137,7 +137,7 @@ public class OverlayCreator {
    *        <code>OverlayNode</code>'s.
    * @throws IOException
    */
-  private void disperseConnections(OverlayNode[] topology) throws IOException {
+  private void disperseConnections(OverlayNode[] topology) throws IOException, InterruptedException {
     for ( int i = 0; i < topology.length; i++ )
     {
       List<String> peers = topology[i].getPeers();

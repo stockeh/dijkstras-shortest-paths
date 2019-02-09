@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import cs455.overlay.dijkstra.RoutingCache;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
@@ -60,15 +62,15 @@ public class MessagingNode implements Node, Protocol {
   /**
    * Messaging Node Statistics
    */
-  private int sendTracker = 0;
+  private AtomicInteger sendTracker = new AtomicInteger( 0 );
 
-  private int receiveTracker = 0;
+  private AtomicInteger receiveTracker = new AtomicInteger( 0 );
 
-  private int relayTracker = 0;
+  private AtomicInteger relayTracker = new AtomicInteger( 0 );
 
-  private long sendSummation = 0;
+  private AtomicLong sendSummation = new AtomicLong( 0 );
 
-  private long receiveSummation = 0;
+  private AtomicLong receiveSummation = new AtomicLong( 0 );
 
   /**
    * Default constructor - creates a new messaging node tying the
@@ -135,7 +137,7 @@ public class MessagingNode implements Node, Protocol {
       connection.start();
 
       this.registryConnection = connection;
-    } catch ( IOException e )
+    } catch ( IOException | InterruptedException e )
     {
       LOG.error( e.getMessage() );
       e.printStackTrace();
@@ -272,7 +274,7 @@ public class MessagingNode implements Node, Protocol {
         connection.start();
         // Add "outgoing" connection to this.connections
         connections.put( peer, connection );
-      } catch ( IOException e )
+      } catch ( IOException | InterruptedException e )
       {
         LOG.error( e.getMessage() );
         e.printStackTrace();
@@ -287,7 +289,8 @@ public class MessagingNode implements Node, Protocol {
    * @param event
    * @param connection
    */
-  private synchronized void acknowledgeNewConnection(Event event, TCPConnection connection) {
+  private synchronized void acknowledgeNewConnection(Event event,
+      TCPConnection connection) {
     String nodeDetails = (( Register ) event).getConnection();
     connections.put( nodeDetails, connection );
   }
@@ -310,12 +313,12 @@ public class MessagingNode implements Node, Protocol {
    */
   private void taskInitiate(Event event) {
     int rounds = (( TaskInitiate ) event).getNumRounds();
-    
+
     Random random = new Random();
     for ( int i = 0; i < rounds; ++i )
     {
       int payload = random.nextInt();
-      this.sendSummation += payload;
+      this.sendSummation.getAndAdd( payload );
       int position = 0;
       try
       {
@@ -327,11 +330,11 @@ public class MessagingNode implements Node, Protocol {
         Message msg =
             new Message( Protocol.MESSAGE, payload, ++position, routingPath );
 
-        // TODO: java.nio.BufferUnderflowException starts here... 
+        // TODO: java.nio.BufferUnderflowException starts here...
         connection.getTCPSenderThread().sendData( msg.getBytes() );
-        ++this.sendTracker;
+        this.sendTracker.getAndIncrement();
       } catch ( ArrayIndexOutOfBoundsException | NullPointerException
-          | ClassCastException | IOException e )
+          | ClassCastException | IOException | InterruptedException e )
       {
         LOG.error( e.getMessage() );
       }
@@ -342,7 +345,7 @@ public class MessagingNode implements Node, Protocol {
     try
     {
       registryConnection.getTCPSenderThread().sendData( complete.getBytes() );
-    } catch ( IOException e )
+    } catch ( IOException | InterruptedException e )
     {
       LOG.error(
           "Unable to inform registry of task completion. " + e.getMessage() );
@@ -366,7 +369,7 @@ public class MessagingNode implements Node, Protocol {
    * 
    * @param event received to retrieve the message
    */
-  private synchronized void messageHandler(Event event) {
+  private void messageHandler(Event event) {
     Message msg = ( Message ) event;
     String[] routingPath = msg.getRoutingPath();
     int position = msg.getPosition();
@@ -374,8 +377,8 @@ public class MessagingNode implements Node, Protocol {
     if ( routingPath.length == position )
     {
       LOG.debug( "RECEIVED" );
-      ++this.receiveTracker;
-      this.receiveSummation += msg.getPayload();
+      this.receiveTracker.getAndIncrement();
+      this.receiveSummation.getAndAdd( msg.getPayload() );
     } else
     {
       TCPConnection connection = connections.get( routingPath[position] );
@@ -384,8 +387,8 @@ public class MessagingNode implements Node, Protocol {
       {
         LOG.debug( "FORWARDING to: " + routingPath[position] );
         connection.getTCPSenderThread().sendData( msg.getBytes() );
-        ++this.relayTracker;
-      } catch ( IOException e )
+        this.relayTracker.getAndIncrement();
+      } catch ( IOException | InterruptedException e )
       {
         LOG.error( e.getMessage() );
         e.printStackTrace();
@@ -423,21 +426,21 @@ public class MessagingNode implements Node, Protocol {
    * associated counters.
    */
   private void sendTrafficSummary() {
-    TaskSummaryResponse response =
-        new TaskSummaryResponse( nodeHost, nodePort, sendTracker, sendSummation,
-            receiveTracker, receiveSummation, relayTracker );
+    TaskSummaryResponse response = new TaskSummaryResponse( nodeHost, nodePort,
+        sendTracker.get(), sendSummation.get(), receiveTracker.get(),
+        receiveSummation.get(), relayTracker.get() );
 
     try
     {
       registryConnection.getTCPSenderThread().sendData( response.getBytes() );
-    } catch ( IOException e )
+    } catch ( IOException | InterruptedException e )
     {
       LOG.error( "Unable to send traffic summary response. " + e.getMessage() );
     }
-    this.sendTracker = 0;
-    this.receiveTracker = 0;
-    this.relayTracker = 0;
-    this.sendSummation = 0;
-    this.receiveSummation = 0;
+    this.sendTracker.set( 0 );
+    this.receiveTracker.set( 0 );
+    this.relayTracker.set( 0 );
+    this.sendSummation.set( 0 );
+    this.receiveSummation.set( 0 );;
   }
 }
