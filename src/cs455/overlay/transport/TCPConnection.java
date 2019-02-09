@@ -38,6 +38,9 @@ public class TCPConnection {
    */
   public TCPConnection(Node node, Socket socket) throws IOException {
     this.socket = socket;
+    // TODO: This helped increase the number of rounds for a time, but not
+    // a definite solution
+    // this.socket.setSendBufferSize( Integer.MAX_VALUE );
     this.sender = new TCPSenderThread( this.socket );
     this.receiver = new TCPReceiverThread( node, this.socket, this );
   }
@@ -68,6 +71,7 @@ public class TCPConnection {
    */
   public void start() {
     (new Thread( this.receiver )).start();
+    (new Thread( this.sender  )).start();
   }
 
   /**

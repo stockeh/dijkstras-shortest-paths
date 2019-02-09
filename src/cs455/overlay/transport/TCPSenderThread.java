@@ -3,6 +3,7 @@ package cs455.overlay.transport;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.LinkedBlockingQueue;
 import cs455.overlay.util.Logger;
 
 /**
@@ -11,7 +12,7 @@ import cs455.overlay.util.Logger;
  * @author stock
  *
  */
-public class TCPSenderThread {
+public class TCPSenderThread implements Runnable {
 
   /**
    * Have the ability to log output INFO, DEBUG, ERROR configured by
@@ -19,10 +20,11 @@ public class TCPSenderThread {
    */
   private final static Logger LOG = new Logger( true, false );
 
-  private Socket socket;
-
   protected DataOutputStream dout;
-  
+
+  private LinkedBlockingQueue<byte[]> queue;
+
+
   /**
    * Default constructor - Initialize the TCPSender with the socket and
    * data output stream information
@@ -31,7 +33,8 @@ public class TCPSenderThread {
    * @throws IOException
    */
   public TCPSenderThread(Socket socket) throws IOException {
-    this.socket = socket;
+    int defaultQueueSize = 100;
+    this.queue = new LinkedBlockingQueue<>( defaultQueueSize );
     this.dout = new DataOutputStream( socket.getOutputStream() );
   }
 
@@ -44,11 +47,27 @@ public class TCPSenderThread {
    * @param data
    * @throws IOException
    */
-  public synchronized void sendData(final byte[] data) throws IOException {
-    LOG.debug( "Sending message to: " + socket.getRemoteSocketAddress() );
-    int len = data.length;
-    dout.writeInt( len );
-    dout.write( data, 0, len );
-    dout.flush();
+  public void sendData(final byte[] data)
+      throws InterruptedException {
+    queue.put( data );
+  }
+
+  @Override
+  public void run() {
+    while ( true )
+    {
+      try
+      {
+        byte[] data = queue.take();
+        int len = data.length;
+        dout.writeInt( len );
+        dout.write( data, 0, len );
+        dout.flush();
+
+      } catch ( InterruptedException | IOException e )
+      {
+        LOG.error( e.getMessage() );
+      }
+    }
   }
 }

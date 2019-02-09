@@ -204,7 +204,7 @@ public class Registry implements Node {
     try
     {
       connection.getTCPSenderThread().sendData( response.getBytes() );
-    } catch ( IOException e )
+    } catch ( IOException | InterruptedException e )
     {
       LOG.error( e.getMessage() );
       e.printStackTrace();
@@ -298,7 +298,7 @@ public class Registry implements Node {
       try
       {
         v.getTCPSenderThread().sendData( linkWeights.getBytes() );
-      } catch ( IOException e )
+      } catch ( IOException | InterruptedException e )
       {
         LOG.error(
             e.getMessage() + "\nUnable to send link weights to connection." );
@@ -344,7 +344,7 @@ public class Registry implements Node {
       try
       {
         v.getTCPSenderThread().sendData( startTask.getBytes() );
-      } catch ( IOException e )
+      } catch ( IOException | InterruptedException e )
       {
         LOG.error( e.getMessage() );
         // TODO: Return if unable to send to one connection?
@@ -372,7 +372,7 @@ public class Registry implements Node {
       try
       {
         // TODO: Sleep for 15 seconds.
-        TimeUnit.SECONDS.sleep( 1 );
+        TimeUnit.SECONDS.sleep( 15 );
       } catch ( InterruptedException e )
       {
         LOG.error( "Unable to sleep thread: " + e.getMessage() );
@@ -383,7 +383,7 @@ public class Registry implements Node {
         try
         {
           connection.getTCPSenderThread().sendData( request.getBytes() );
-        } catch ( IOException e )
+        } catch ( IOException | InterruptedException e )
         {
           LOG.error(
               e.getMessage() + "\nUnable to send link weights to connection." );
