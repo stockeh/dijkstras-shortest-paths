@@ -10,6 +10,10 @@ import java.io.IOException;
 
 /**
  * 
+ * Response to the registry node of task statistics.
+ * 
+ * This message is delivered up receiving a TaskSummaryRequest.
+ * 
  * @author stock
  *
  */
@@ -63,6 +67,18 @@ public class TaskSummaryResponse implements Event {
     din.close();
   }
 
+  /**
+   * Default constructor - create a new task summary response object
+   * with the respective populated fields.
+   * 
+   * @param host
+   * @param port
+   * @param sendTracker
+   * @param sendSummation
+   * @param receiveTracker
+   * @param receiveSummation
+   * @param relayTracker
+   */
   public TaskSummaryResponse(String host, int port, int sendTracker,
       long sendSummation, int receiveTracker, long receiveSummation,
       int relayTracker) {

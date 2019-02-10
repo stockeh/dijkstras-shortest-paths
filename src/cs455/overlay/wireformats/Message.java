@@ -39,13 +39,12 @@ public class Message implements Event {
   /**
    * Default constructor - create a new message to send between nodes.
    * 
-   * @param type
    * @param payload
    * @param position
    * @param routingPath
    */
-  public Message(int type, int payload, int position, String[] routingPath) {
-    this.type = type;
+  public Message(int payload, int position, String[] routingPath) {
+    this.type = Protocol.MESSAGE;
     this.payload = payload;
     this.position = position;
     this.routingPath = routingPath;

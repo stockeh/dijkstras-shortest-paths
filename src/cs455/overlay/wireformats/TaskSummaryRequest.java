@@ -9,6 +9,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
+ * Upon receipt of all task complete messages to the registry a
+ * request for the task summary is delivered to each node in the
+ * system.
  * 
  * @author stock
  *
@@ -68,6 +71,7 @@ public class TaskSummaryRequest implements Event {
     return marshalledBytes;
   }
 
+  @Override
   public String toString() {
     return "TaskSummaryRequest";
   }

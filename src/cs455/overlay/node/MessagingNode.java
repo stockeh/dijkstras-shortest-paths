@@ -328,7 +328,7 @@ public class MessagingNode implements Node, Protocol {
         LOG.debug( "New Route to: " + Arrays.toString( routingPath ) );
         TCPConnection connection = connections.get( routingPath[position] );
         Message msg =
-            new Message( Protocol.MESSAGE, payload, ++position, routingPath );
+            new Message( payload, ++position, routingPath );
 
         // TODO: java.nio.BufferUnderflowException starts here...
         connection.getTCPSenderThread().sendData( msg.getBytes() );
@@ -341,7 +341,7 @@ public class MessagingNode implements Node, Protocol {
     }
 
     TaskComplete complete =
-        new TaskComplete( Protocol.TASK_COMPLETE, nodeHost, nodePort );
+        new TaskComplete( nodeHost, nodePort );
     try
     {
       registryConnection.getTCPSenderThread().sendData( complete.getBytes() );

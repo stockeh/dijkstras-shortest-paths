@@ -53,12 +53,11 @@ public class RegisterResponse implements Event {
   /**
    * Default constructor - create a new RegisterResponse message.
    * 
-   * @param type
    * @param status
    * @param info
    */
-  public RegisterResponse(int type, byte status, String info) {
-    this.type = type;
+  public RegisterResponse(byte status, String info) {
+    this.type = Protocol.REGISTER_RESPONSE;
     this.status = status;
     this.info = info;
   }

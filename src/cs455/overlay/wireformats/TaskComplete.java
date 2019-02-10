@@ -54,12 +54,11 @@ public class TaskComplete implements Event {
    * Default constructor - create a task complete object to inform the
    * registry
    * 
-   * @param type
    * @param host
    * @param port
    */
-  public TaskComplete(int type, String host, int port) {
-    this.type = type;
+  public TaskComplete(String host, int port) {
+    this.type = Protocol.TASK_COMPLETE;
     this.host = host;
     this.port = port;
   }

@@ -38,11 +38,10 @@ public class LinkWeights implements Event {
    * Default constructor - create a new link weight object with the
    * links between nodes
    * 
-   * @param type
    * @param topology
    */
-  public LinkWeights(int type, OverlayNode[] topology) {
-    this.type = type;
+  public LinkWeights(OverlayNode[] topology) {
+    this.type = Protocol.LINK_WEIGHTS;
 
     // Retrieve the number of links from the topology to allocate the
     // correct number of links in the overlay

@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.MessagingNodeList;
-import cs455.overlay.wireformats.Protocol;
 
 /**
  * The network topology and connections are established for the
@@ -67,8 +66,7 @@ public class OverlayCreator {
     OverlayNode[] topology =
         buildTopology( connections, connectingEdges, totalConnections );
 
-    LinkWeights linkWeights =
-        new LinkWeights( Protocol.LINK_WEIGHTS, topology );
+    LinkWeights linkWeights = new LinkWeights( topology );
 
     // TODO: Catch IOException ?
     disperseConnections( topology );
@@ -137,14 +135,14 @@ public class OverlayCreator {
    *        <code>OverlayNode</code>'s.
    * @throws IOException
    */
-  private void disperseConnections(OverlayNode[] topology) throws IOException, InterruptedException {
+  private void disperseConnections(OverlayNode[] topology)
+      throws IOException, InterruptedException {
     for ( int i = 0; i < topology.length; i++ )
     {
       List<String> peers = topology[i].getPeers();
       int numPeers = peers.size();
 
-      MessagingNodeList message = new MessagingNodeList(
-          Protocol.MESSAGING_NODE_LIST, numPeers, peers );
+      MessagingNodeList message = new MessagingNodeList( numPeers, peers );
 
       topology[i].getConnection().getTCPSenderThread()
           .sendData( message.getBytes() );

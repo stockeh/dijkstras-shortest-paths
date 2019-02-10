@@ -9,6 +9,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
+ * The registry informs nodes in the overlay when they should start
+ * sending messages to each other. It does so via the TaskInitiate
+ * control message.
  * 
  * @author stock
  *
@@ -43,11 +46,10 @@ public class TaskInitiate implements Event {
   /**
    * Default constructor - create a new task initiation
    * 
-   * @param type
    * @param numRounds
    */
-  public TaskInitiate(int type, int numRounds) {
-    this.type = type;
+  public TaskInitiate(int numRounds) {
+    this.type = Protocol.TASK_INITIATE;
     this.numRounds = numRounds;
   }
 
@@ -57,6 +59,7 @@ public class TaskInitiate implements Event {
   public int getNumRounds() {
     return numRounds;
   }
+
   /**
    * {@inheritDoc}
    */

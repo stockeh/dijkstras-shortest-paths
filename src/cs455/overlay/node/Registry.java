@@ -199,8 +199,7 @@ public class Registry implements Node {
       status = Protocol.FAILURE;
     }
 
-    RegisterResponse response =
-        new RegisterResponse( Protocol.REGISTER_RESPONSE, status, message );
+    RegisterResponse response = new RegisterResponse( status, message );
     try
     {
       connection.getTCPSenderThread().sendData( response.getBytes() );
@@ -338,7 +337,7 @@ public class Registry implements Node {
       LOG.info( "Input did not contain a valid number of rounds. "
           + "Defaulting to each having " + rounds + " rounds." );
     }
-    TaskInitiate startTask = new TaskInitiate( Protocol.TASK_INITIATE, rounds );
+    TaskInitiate startTask = new TaskInitiate( rounds );
     connections.forEach( (k, v) ->
     {
       try
