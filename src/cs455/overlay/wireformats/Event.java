@@ -2,6 +2,13 @@ package cs455.overlay.wireformats;
 
 import java.io.IOException;
 
+/**
+ * Public interface that each message will implement.
+ *
+ * 
+ * @author stock
+ *
+ */
 public interface Event {
 
   /**

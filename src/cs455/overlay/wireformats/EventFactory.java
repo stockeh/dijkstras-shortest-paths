@@ -41,8 +41,8 @@ public class EventFactory {
   }
 
   /**
-   * Create a new event, i.e., messaging object from the marshalledBytes
-   * of said object.
+   * Create a new event, i.e., wireformat object from the marshalled
+   * bytes of said object.
    * 
    * @param message
    * @return the event object from the <code>byte[]</code>.

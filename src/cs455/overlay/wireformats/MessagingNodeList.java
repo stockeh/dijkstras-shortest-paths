@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Messaging Node List message type to provide a peer-list to the
- * connected nodes for setting up the overlay.
+ * Messaging Node List wireformat type is used to provide a peer-list
+ * to the connected nodes for setting up the overlay.
  * 
  * @author stock
  *
@@ -61,12 +61,11 @@ public class MessagingNodeList implements Event {
   /**
    * Default constructor - create a new messaging node list message.
    * 
-   * @param type
    * @param numPeers
    * @param peers
    */
-  public MessagingNodeList(int type, int numPeers, List<String> peers) {
-    this.type = type;
+  public MessagingNodeList(int numPeers, List<String> peers) {
+    this.type = Protocol.MESSAGING_NODE_LIST;
     this.numPeers = numPeers;
     this.peers = peers;
   }
@@ -81,12 +80,13 @@ public class MessagingNodeList implements Event {
 
   /**
    * 
-   * @return The peers for this given node. May be empty or uninitialized.
+   * @return The peers for this given node. May be empty or
+   *         uninitialized.
    */
   public List<String> getPeers() {
     return peers;
   }
-  
+
   /**
    * {@inheritDoc}
    */
@@ -116,11 +116,13 @@ public class MessagingNodeList implements Event {
     return marshalledBytes;
   }
 
+  /**
+   * Cast the class elements to human readable format
+   */
   @Override
   public String toString() {
     return "\n" + Integer.toString( this.type ) + " "
-        + Integer.toString( this.numPeers ) + " "
-        + String.join( ", ", peers );
+        + Integer.toString( this.numPeers ) + " " + String.join( ", ", peers );
   }
 
 }

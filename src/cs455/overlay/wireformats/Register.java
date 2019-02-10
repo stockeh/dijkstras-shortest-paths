@@ -51,9 +51,9 @@ public class Register implements Event {
   }
 
   /**
-   * Default constructor - create a new register message.
+   * Default constructor - create a new register or deregister message.
    * 
-   * @param type
+   * @param type Specified for use of register or deregister message.
    * @param ipAddress
    * @param port
    */
