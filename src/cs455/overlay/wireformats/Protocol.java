@@ -4,7 +4,7 @@ package cs455.overlay.wireformats;
  * Interface defining the wireformats between messaging nodes and the
  * registry.
  *
- * @author Jason Stock
+ * @author stock
  *
  */
 public interface Protocol {

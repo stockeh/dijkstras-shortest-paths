@@ -8,6 +8,17 @@ import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.EventFactory;
 
+/**
+ * The TCP Receiving Thread to acknowledge new wireformat messages
+ * received on the specified connection.
+ * 
+ * The thread is blocked waiting to read an integer (the protocol for
+ * each message). This ensures the thread is not running unless there
+ * is something to be read.
+ * 
+ * @author stock
+ *
+ */
 public class TCPReceiverThread implements Runnable {
 
   /**
