@@ -4,7 +4,6 @@ import java.io.IOException;
 
 /**
  * Public interface that each message will implement.
- *
  * 
  * @author stock
  *

@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import cs455.overlay.util.StatisticsCollectorAndDisplay;
 
 /**
  * 
@@ -73,23 +74,19 @@ public class TaskSummaryResponse implements Event {
    * 
    * @param host
    * @param port
-   * @param sendTracker
-   * @param sendSummation
-   * @param receiveTracker
-   * @param receiveSummation
-   * @param relayTracker
+   * @param stats holds a link to the statistics information for the
+   *        messaging tasks
    */
-  public TaskSummaryResponse(String host, int port, int sendTracker,
-      long sendSummation, int receiveTracker, long receiveSummation,
-      int relayTracker) {
+  public TaskSummaryResponse(String host, int port,
+      StatisticsCollectorAndDisplay stats) {
     this.type = Protocol.TRAFFIC_SUMMARY;
     this.host = host;
     this.port = port;
-    this.sendTracker = sendTracker;
-    this.sendSummation = sendSummation;
-    this.receiveTracker = receiveTracker;
-    this.receiveSummation = receiveSummation;
-    this.relayTracker = relayTracker;
+    this.sendTracker = stats.sendTracker.get();
+    this.sendSummation = stats.sendSummation.get();
+    this.receiveTracker = stats.receiveTracker.get();
+    this.receiveSummation = stats.receiveSummation.get();
+    this.relayTracker = stats.relayTracker.get();
   }
 
   public int getSendTracker() {

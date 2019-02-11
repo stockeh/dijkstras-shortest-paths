@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 import cs455.overlay.node.Node;
-import cs455.overlay.util.Logger;
 
 /**
  * This class is used to establish a connection by starting a new
@@ -14,13 +13,6 @@ import cs455.overlay.util.Logger;
  *
  */
 public class TCPConnection {
-
-  /**
-   * Have the ability to log output INFO, DEBUG, ERROR configured by
-   * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
-   */
-  @SuppressWarnings( "unused" )
-  private final static Logger LOG = new Logger( true, true );
 
   private Socket socket;
 

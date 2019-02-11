@@ -10,12 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import cs455.overlay.dijkstra.RoutingCache;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
+import cs455.overlay.util.StatisticsCollectorAndDisplay;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.Message;
@@ -59,18 +58,8 @@ public class MessagingNode implements Node, Protocol {
 
   private String nodeHost;
 
-  /**
-   * Messaging Node Statistics
-   */
-  private AtomicInteger sendTracker = new AtomicInteger( 0 );
-
-  private AtomicInteger receiveTracker = new AtomicInteger( 0 );
-
-  private AtomicInteger relayTracker = new AtomicInteger( 0 );
-
-  private AtomicLong sendSummation = new AtomicLong( 0 );
-
-  private AtomicLong receiveSummation = new AtomicLong( 0 );
+  private StatisticsCollectorAndDisplay statistics =
+      new StatisticsCollectorAndDisplay();
 
   /**
    * Default constructor - creates a new messaging node tying the
@@ -318,7 +307,7 @@ public class MessagingNode implements Node, Protocol {
     for ( int i = 0; i < rounds; ++i )
     {
       int payload = random.nextInt();
-      this.sendSummation.getAndAdd( payload );
+      statistics.sendSummation.getAndAdd( payload );
       int position = 0;
       try
       {
@@ -327,12 +316,10 @@ public class MessagingNode implements Node, Protocol {
         String[] routingPath = routes.getRoute( sinkNode );
         LOG.debug( "New Route to: " + Arrays.toString( routingPath ) );
         TCPConnection connection = connections.get( routingPath[position] );
-        Message msg =
-            new Message( payload, ++position, routingPath );
+        Message msg = new Message( payload, ++position, routingPath );
 
-        // TODO: java.nio.BufferUnderflowException starts here...
         connection.getTCPSenderThread().sendData( msg.getBytes() );
-        this.sendTracker.getAndIncrement();
+        statistics.sendTracker.getAndIncrement();
       } catch ( ArrayIndexOutOfBoundsException | NullPointerException
           | ClassCastException | IOException | InterruptedException e )
       {
@@ -340,8 +327,7 @@ public class MessagingNode implements Node, Protocol {
       }
     }
 
-    TaskComplete complete =
-        new TaskComplete( nodeHost, nodePort );
+    TaskComplete complete = new TaskComplete( nodeHost, nodePort );
     try
     {
       registryConnection.getTCPSenderThread().sendData( complete.getBytes() );
@@ -377,8 +363,8 @@ public class MessagingNode implements Node, Protocol {
     if ( routingPath.length == position )
     {
       LOG.debug( "RECEIVED" );
-      this.receiveTracker.getAndIncrement();
-      this.receiveSummation.getAndAdd( msg.getPayload() );
+      statistics.receiveTracker.getAndIncrement();
+      statistics.receiveSummation.getAndAdd( msg.getPayload() );
     } else
     {
       TCPConnection connection = connections.get( routingPath[position] );
@@ -387,7 +373,7 @@ public class MessagingNode implements Node, Protocol {
       {
         LOG.debug( "FORWARDING to: " + routingPath[position] );
         connection.getTCPSenderThread().sendData( msg.getBytes() );
-        this.relayTracker.getAndIncrement();
+        statistics.relayTracker.getAndIncrement();
       } catch ( IOException | InterruptedException e )
       {
         LOG.error( e.getMessage() );
@@ -426,9 +412,8 @@ public class MessagingNode implements Node, Protocol {
    * associated counters.
    */
   private void sendTrafficSummary() {
-    TaskSummaryResponse response = new TaskSummaryResponse( nodeHost, nodePort,
-        sendTracker.get(), sendSummation.get(), receiveTracker.get(),
-        receiveSummation.get(), relayTracker.get() );
+    TaskSummaryResponse response =
+        new TaskSummaryResponse( nodeHost, nodePort, statistics );
 
     try
     {
@@ -437,10 +422,6 @@ public class MessagingNode implements Node, Protocol {
     {
       LOG.error( "Unable to send traffic summary response. " + e.getMessage() );
     }
-    this.sendTracker.set( 0 );
-    this.receiveTracker.set( 0 );
-    this.relayTracker.set( 0 );
-    this.sendSummation.set( 0 );
-    this.receiveSummation.set( 0 );;
+    statistics.reset();
   }
 }
