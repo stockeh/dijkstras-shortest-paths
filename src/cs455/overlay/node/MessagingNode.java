@@ -306,24 +306,37 @@ public class MessagingNode implements Node, Protocol {
     Random random = new Random();
     for ( int i = 0; i < rounds; ++i )
     {
-      int payload = random.nextInt();
-      statistics.sendSummation.getAndAdd( payload );
-      int position = 0;
+      String sinkNode;
+      String[] routingPath;
+      TCPConnection connection;
       try
       {
-        String sinkNode =
+        sinkNode =
             routes.getConnection( random.nextInt( routes.numConnection() ) );
-        String[] routingPath = routes.getRoute( sinkNode );
+        routingPath = routes.getRoute( sinkNode );
+        connection = connections.get( routingPath[0] );
         LOG.debug( "New Route to: " + Arrays.toString( routingPath ) );
-        TCPConnection connection = connections.get( routingPath[position] );
-        Message msg = new Message( payload, ++position, routingPath );
-
-        connection.getTCPSenderThread().sendData( msg.getBytes() );
-        statistics.sendTracker.getAndIncrement();
       } catch ( ArrayIndexOutOfBoundsException | NullPointerException
-          | ClassCastException | IOException | InterruptedException e )
+          | ClassCastException e )
       {
         LOG.error( e.getMessage() );
+        return;
+      }
+      // Send 5 messages to the randomly chosen sink node per round
+      for ( int m = 0; m < 5; ++m )
+      {
+        int position = 0;
+        int payload = random.nextInt();
+        statistics.sendSummation.getAndAdd( payload );
+        try
+        {
+          Message msg = new Message( payload, ++position, routingPath );
+          connection.getTCPSenderThread().sendData( msg.getBytes() );
+          statistics.sendTracker.getAndIncrement();
+        } catch ( IOException | InterruptedException e )
+        {
+          LOG.error( e.getMessage() );
+        }
       }
     }
 
