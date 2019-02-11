@@ -18,6 +18,13 @@ There is exactly one registry in the system. The registry provides the following
 * **Messaging Node**  
 Unlike the registry, there are multiple messaging nodes in the system.  A messaging node provides two closely related functions; it initiates and accepts both communications and messages within the system.  </br></br>Communications that nodes have with each other are based on TCP. Each messaging node is automatically configure to a ports over which it listens for communications.  </br></br>Once the initialization is complete, the node will send a registration request to the Registry.
 
+* **Package Structure**
+  * *cs455.overlay.dijkstra*: consists of a nodes routing cache, and classes to compute the shortest paths from the overlay.
+  * *cs455.overlay.node*: fundamental classes for the Messaging Node, Registry, and Node classes.
+  * *cs455.overlay.transport*: underlaying TCP transportation structure for new connections, receiving, and sending threads.
+  * *cs455.overlay.util*: utility classes to assist the implementation across the network / application
+  * *cs455.overlay.wireformats*: protocol defined for the various messages that are sent amongst the network.  
+  
 ## Interacting with the Processes. 
 **Registry**  
   * *list-messaging-nodes*: this results in information about the messaging nodes (hostname, and port-number) being displayed.  
