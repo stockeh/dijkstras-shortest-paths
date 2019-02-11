@@ -5,6 +5,12 @@ import java.util.Map;
 import cs455.overlay.wireformats.LinkWeights;
 
 /**
+ * Contains the <code>routes</code> for the each node that
+ * instantiates this class to avoid recomputing routes.
+ * 
+ * In order to get the routing cache for a node, the link weights need
+ * to be supplied to each of the nodes in the overlay. From here, the
+ * shortest bath can be built.
  * 
  * @author stock
  *

@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.util.Logger;
 import cs455.overlay.util.OverlayCreator;
+import cs455.overlay.util.StatisticsCollectorAndDisplay;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.Protocol;
@@ -24,6 +26,13 @@ import cs455.overlay.wireformats.TaskSummaryResponse;
 
 /**
  * Maintains information about the registered messaging nodes.
+ * 
+ * The registry is the brain of the network overlay. It is in charge
+ * of registering / deregistering messaging nodes, setting up the
+ * overlay, sending schematics to the nodes, and starting the process
+ * of message sending. There will only be <b>one</> instance of the
+ * registry in the network - this is tied to a specific port number
+ * upon startup.
  *
  * @author stock
  *
@@ -36,8 +45,6 @@ public class Registry implements Node {
    */
   private static final Logger LOG = new Logger( true, false );
 
-  private static Map<String, TCPConnection> connections = new HashMap<>();
-
   private static final String LIST_MSG_NODES = "list-messaging-nodes";
 
   private static final String SETUP_OVERLAY = "setup-overlay";
@@ -48,14 +55,16 @@ public class Registry implements Node {
 
   private static final String START = "start";
 
-  private LinkWeights linkWeights = null;
-
-  private int receivedCompletedTasks = 0;
+  private Map<String, TCPConnection> connections = new HashMap<>();
 
   private List<TaskSummaryResponse> statisticsSummary = new ArrayList<>();
 
+  private LinkWeights linkWeights = null;
+
+  private AtomicInteger receivedCompletedTasks = new AtomicInteger( 0 );
+
   /**
-   * Stands-up the registry.
+   * Stands-up the registry as an entry point to the class.
    *
    * @param args
    */
@@ -254,7 +263,7 @@ public class Registry implements Node {
    * @param input The arguments passed by the command line interpreter
    */
   private void setupOverlay(String[] input) {
-    int connectingEdges = 2;
+    int connectingEdges = connections.size() < 5 ? connections.size() - 1 : 4;
     try
     {
       connectingEdges = Integer.parseInt( input[1] );
@@ -352,9 +361,9 @@ public class Registry implements Node {
   }
 
   /**
-   * TODO: It be better to verify the connections that are received by
-   * host:port identifier. Then if there is a specific node missing, it
-   * can be handled more seriously.
+   * TODO: It may be better to verify the connections that are received
+   * by host:port identifier. Then if there is a specific node missing,
+   * it can be handled more seriously.
    * 
    * Increment for every received completed task and compare with the
    * total number in the registry. If all tasks have <i>completed</i>
@@ -363,14 +372,15 @@ public class Registry implements Node {
    * 
    * @param event
    */
-  private synchronized void completedTaskHandler() {
-    LOG.debug( "TASK HANDLER: " + Integer.toString( receivedCompletedTasks )
+  private void completedTaskHandler() {
+    receivedCompletedTasks.getAndIncrement();
+    LOG.debug( "TASK HANDLER: " + receivedCompletedTasks.toString()
         + " , " + Integer.toString( connections.size() ) );
-    if ( ++receivedCompletedTasks == connections.size() )
+    if ( receivedCompletedTasks.get() == connections.size() )
     {
       try
       {
-        // TODO: Sleep for 15 seconds.
+        // Sleep for 15 seconds to allow all messages to be received.
         TimeUnit.SECONDS.sleep( 15 );
       } catch ( InterruptedException e )
       {
@@ -389,7 +399,7 @@ public class Registry implements Node {
           return;
         }
       } );
-      receivedCompletedTasks = 0;
+      receivedCompletedTasks.set( 0 );
     }
   }
 
@@ -406,27 +416,7 @@ public class Registry implements Node {
         + " , " + Integer.toString( connections.size() ) );
     if ( statisticsSummary.size() == connections.size() )
     {
-      int totalSent = 0;
-      int totalReceived = 0;
-      long totalSentSummation = 0;
-      long totalReceivedSummation = 0;
-
-      System.out.println(
-          String.format( "\n%1$15s %2$10s %3$10s %4$15s %5$15s %6$10s", "",
-              "Sent", "Received", "Sigma Sent", "Sigma Received", "Relayed" ) );
-      for ( TaskSummaryResponse summary : statisticsSummary )
-      {
-        System.out.println( summary.toString() );
-        totalSent += summary.getSendTracker();
-        totalReceived += summary.getReceiveTracker();
-        totalSentSummation += summary.getSendSummation();
-        totalReceivedSummation += summary.getReceiveSummation();
-      }
-      System.out.println(
-          String.format( "%1$15s %2$10s %3$10s %4$15s %5$15s\n", "Total Sum:",
-              Integer.toString( totalSent ), Integer.toString( totalReceived ),
-              Long.toString( totalSentSummation ),
-              Long.toString( totalReceivedSummation ) ) );
+      (new StatisticsCollectorAndDisplay()).display( statisticsSummary );
       statisticsSummary.clear();
     }
   }

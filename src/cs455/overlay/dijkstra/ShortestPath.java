@@ -3,32 +3,28 @@ package cs455.overlay.dijkstra;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import cs455.overlay.util.Logger;
 import cs455.overlay.wireformats.LinkWeights;
 
 /**
+ * Compute the shortest path given the link weights to all other
+ * connections.
+ * 
+ * This class will transform the link weights to a two-dimensional
+ * graph where representing each connection as an index and the
+ * weights as bidirectional values. Implementation of Dijkstra's
+ * Algorithm was referenced from the GeeksforGeeks lecture on
+ * <i>Dijkstra’s shortest path algorithm</i>. The routes from the
+ * <i>source</i> node to all others in the network are appended to a
+ * map of <code>routes</code> from the driving method.
  * 
  * @author stock
  *
  */
 public class ShortestPath {
-  /**
-   * Have the ability to log output INFO, DEBUG, ERROR configured by
-   * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
-   */
-  private static final Logger LOG = new Logger( true, true );
 
   private int[][] graph;
 
   private static final int NO_PARENT = -1;
-
-  /**
-   * USED FOR TESTING
-   */
-  public static void main(String[] args) {
-    ShortestPath s = new ShortestPath();
-    s.buildShortestPath( null, null, "0.0.0.0:63673" );
-  }
 
   /**
    * Constructs the routes, from a given starting node, for the topology
@@ -111,142 +107,95 @@ public class ShortestPath {
   }
 
   /**
+   * Compute Dijkstra's Algorithm from the source node to every node.
+   * This entails traversing the graph and dynamically update
+   * unprocessed nodes.
    * 
-   * 
-   * @param startVertex
-   * @return
+   * @param source
+   * @return The array of parent values from the start node to each
+   *         node.
    */
-  public int[] dijkstra(int startVertex) {
-    int nVertices = graph[0].length;
+  public int[] dijkstra(int source) {
+    int numNodes = graph[0].length;
 
     // shortestDistances[i] will hold the shortest distance from src to i
-    int[] shortestDistances = new int[nVertices];
+    int[] shortestDistances = new int[numNodes];
 
     // added[i] will true if vertex i is included / in shortest path tree
     // or shortest distance from src to i is finalized
-    boolean[] added = new boolean[nVertices];
+    boolean[] added = new boolean[numNodes];
 
-    for ( int index = 0; index < nVertices; index++ )
+    for ( int index = 0; index < numNodes; index++ )
     {
       shortestDistances[index] = Integer.MAX_VALUE;
       added[index] = false;
     }
 
-    // Distance of source vertex from itself is always 0
-    shortestDistances[startVertex] = 0;
+    // Store the shortest path for each node
+    int[] parents = new int[numNodes];
+    parents[source] = NO_PARENT;
 
-    // Parent array to store shortest path tree
-    int[] parents = new int[nVertices];
+    shortestDistances[source] = 0;
 
-    // The starting vertex does not have a parent
-    parents[startVertex] = NO_PARENT;
-
-    // Find shortest path for all vertices
-    for ( int i = 1; i < nVertices; i++ )
+    for ( int i = 1; i < numNodes; i++ )
     {
-      // Pick the minimum distance vertex from the set of vertices not yet
-      // processed. nearestVertex is always equal to startNode in first
-      // iteration.
+      // find the minimum distance node that has not been processed.
       int nearestVertex = -1;
-      int shortestDistance = Integer.MAX_VALUE;
-      for ( int vertexIndex = 0; vertexIndex < nVertices; vertexIndex++ )
+      int distance = Integer.MAX_VALUE;
+      for ( int nodeIndex = 0; nodeIndex < numNodes; nodeIndex++ )
       {
-        if ( !added[vertexIndex]
-            && shortestDistances[vertexIndex] < shortestDistance )
+        if ( !added[nodeIndex] && shortestDistances[nodeIndex] < distance )
         {
-          nearestVertex = vertexIndex;
-          shortestDistance = shortestDistances[vertexIndex];
+          nearestVertex = nodeIndex;
+          distance = shortestDistances[nodeIndex];
         }
       }
 
       // Mark the picked vertex as processed
       added[nearestVertex] = true;
 
-      // Update dist value of the adjacent vertices of the picked vertex.
-      for ( int vertexIndex = 0; vertexIndex < nVertices; vertexIndex++ )
+      // Update the distances for each connected node from the nearest.
+      for ( int nodeIndex = 0; nodeIndex < numNodes; nodeIndex++ )
       {
-        int edgeDistance = graph[nearestVertex][vertexIndex];
+        int edgeDistance = graph[nearestVertex][nodeIndex];
 
-        if ( edgeDistance > 0 && ((shortestDistance
-            + edgeDistance) < shortestDistances[vertexIndex]) )
+        if ( edgeDistance > 0
+            && ((distance + edgeDistance) < shortestDistances[nodeIndex]) )
         {
-          parents[vertexIndex] = nearestVertex;
-          shortestDistances[vertexIndex] = shortestDistance + edgeDistance;
+          parents[nodeIndex] = nearestVertex;
+          shortestDistances[nodeIndex] = distance + edgeDistance;
         }
       }
     }
-
-    // printSolution( startVertex, shortestDistances, parents );
     return parents;
   }
 
   /**
+   * Recursive function to build the path from the source to the
+   * specified <code>current</code> value. This will call itself while
+   * the specified <code>current</code> value is not the end. At this
+   * point, the method will return and for every value that is not the
+   * source will be converted from it's transformed index value to
+   * actual identifier, i.e., host:port address.
    * 
-   * 
-   * @param startVertex
-   * @param currentVertex
-   * @param parents
-   * @param transformer
-   * @param addresses
+   * @param source index of the nodes self
+   * @param current index traversing the graph to the end
+   * @param parents contains the list for the routes as an index
+   * @param transformer contains a string of the address with respective
+   *        indices for each node
+   * @param addresses will be the value that is being added to as the
+   *        recursive function returns.
    */
-  private void buildPath(int startVertex, int currentVertex, int[] parents,
+  private void buildPath(int source, int current, int[] parents,
       List<String> transformer, List<String> addresses) {
-    if ( currentVertex == NO_PARENT )
+    if ( current == NO_PARENT )
     {
       return;
     }
-    buildPath( startVertex, parents[currentVertex], parents, transformer,
-        addresses );
-    if ( currentVertex != startVertex )
+    buildPath( source, parents[current], parents, transformer, addresses );
+    if ( current != source )
     {
-      addresses.add( transformer.get( currentVertex ) );
-    }
-  }
-
-  /**
-   * A utility function to print the constructed distances array and
-   * shortest paths.
-   * 
-   * @param startVertex
-   * @param distances
-   * @param parents
-   */
-  private void printSolution(int startVertex, int[] distances, int[] parents) {
-    int nVertices = distances.length;
-    System.out.print( "Vertex\t\tDistance\tPath" );
-
-    for ( int index = 0; index < nVertices; index++ )
-    {
-      if ( index != startVertex )
-      {
-        System.out.print( "\n" + startVertex + " -> " );
-        System.out.print( index + " \t\t " );
-        System.out.print( distances[index] + "\t\t" );
-        printPath( startVertex, index, parents );
-      }
-    }
-    System.out.println();
-  }
-
-  /**
-   * Function to print shortest path from source to currentVertex using
-   * parents array.
-   * 
-   * @param startVertex
-   * @param currentVertex
-   * @param parents
-   */
-  private void printPath(int startVertex, int currentVertex, int[] parents) {
-
-    // Base case : Source node has been processed
-    if ( currentVertex == NO_PARENT )
-    {
-      return;
-    }
-    printPath( startVertex, parents[currentVertex], parents );
-    if ( currentVertex != startVertex )
-    {
-      System.out.print( currentVertex + " " );
+      addresses.add( transformer.get( current ) );
     }
   }
 }
