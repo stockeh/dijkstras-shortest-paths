@@ -45,7 +45,7 @@ public class MessagingNode implements Node, Protocol {
 
   private static final String EXIT_OVERLAY = "exit-overlay";
 
-  private static final String CONNECTIONS = "connections";
+  private static final String HELP = "help";
 
   private TCPConnection registryConnection;
 
@@ -140,7 +140,8 @@ public class MessagingNode implements Node, Protocol {
    */
   @SuppressWarnings( "resource" )
   private void interact() {
-    LOG.info( "Input a command to interact with processes" );
+    LOG.info(
+        "Input a command to interact with processes.  Input 'help' for a list of commands." );
     boolean running = true;
     while ( running )
     {
@@ -156,15 +157,14 @@ public class MessagingNode implements Node, Protocol {
           running = false;
           break;
 
-        case CONNECTIONS :
-          System.out
-              .println( "\nthis connections - " + nodeHost + ":" + nodePort );
-          connections.forEach( (k, v) -> System.out.println( k ) );
-          System.out.println();
+        case HELP :
+          System.out.println(
+              "\n\tprint-shortest-path\t: print shortest path from this node to all others.\n\n"
+                  + "\texit-overlay\t\t: leave the overlay prior to starting.\n" );
           break;
         default :
-          LOG.info(
-              "Not a valid command. USAGE: print-shortest-path | exit-overlay" );
+          LOG.error(
+              "Unable to process. Please enter a valid command! Input 'help' for options." );
           break;
       }
     }
