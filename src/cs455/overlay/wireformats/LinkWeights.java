@@ -160,10 +160,10 @@ public class LinkWeights implements Event {
     StringBuilder stringBuilder = new StringBuilder();
     for ( String link : links )
     {
-      stringBuilder.append( link + "\n" );
+      stringBuilder.append( "\t" + link + "\n" );
     }
     String msg =
-        "\nThere are " + Integer.toString( numLinks ) + " total links\n";
+        "\nThere are " + Integer.toString( numLinks ) + " total links:\n\n";
     return msg + stringBuilder.toString();
   }
 
