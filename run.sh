@@ -8,7 +8,7 @@ gradle clean; gradle build;
 
 dbus-launch gnome-terminal --geometry=105x72 -x bash -c "cd ${DIR}/build/classes/java/main; java cs455.overlay.node.Registry ${registry_port}"
 
-sleep .5
+sleep 2
 
 for i in `cat machine_list`;
 do

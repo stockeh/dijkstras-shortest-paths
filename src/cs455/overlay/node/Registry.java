@@ -53,6 +53,8 @@ public class Registry implements Node {
 
   private static final String LIST_WEIGHTS = "list-weights";
 
+  private static final String HELP = "help";
+
   private static final String START = "start";
 
   private Map<String, TCPConnection> connections = new HashMap<>();
@@ -97,7 +99,8 @@ public class Registry implements Node {
    */
   @SuppressWarnings( "resource" )
   private void interact() {
-    LOG.info( "Input a command to interact with processes" );
+    LOG.info(
+        "Input a command to interact with processes.  Input 'help' for a list of commands." );
     Scanner scan = new Scanner( System.in );
     while ( true )
     {
@@ -142,8 +145,18 @@ public class Registry implements Node {
           taskInitiate( input );
           break;
 
+        case HELP :
+          System.out.println(
+              "\n\tlist-messaging-nodes\t\t: show the nodes connected with the overlay.\n\n"
+                  + "\tsetup-overlay k\t\t\t: setup a k-regular graph of order N.\n\n"
+                  + "\tlist-weights\t\t\t: display the link weights associated with the network topology.\n\n"
+                  + "\tsend-overlay-link-weights\t: send the topology overlay weights to the connected nodes.\n\n"
+                  + "\tstart r\t\t\t\t: notify the connected nodes to initialize r rounds of message sending.\n" );
+          break;
+
         default :
-          LOG.error( "Unable to process. Please enter a valid command!" );
+          LOG.error(
+              "Unable to process. Please enter a valid command! Input 'help' for options." );
           break;
       }
     }
@@ -186,8 +199,9 @@ public class Registry implements Node {
   private synchronized void registrationHandler(Event event,
       TCPConnection connection, final boolean register) {
     String nodeDetails = (( Register ) event).getConnection();
-    String message = registerStatusMessage( nodeDetails, connection.getSocket()
-        .getInetAddress().getHostName().split("\\.")[0], register );
+    String message = registerStatusMessage( nodeDetails,
+        connection.getSocket().getInetAddress().getHostName().split( "\\." )[0],
+        register );
     byte status;
     if ( message.length() == 0 )
     {
@@ -207,7 +221,7 @@ public class Registry implements Node {
       LOG.error( "Unable to process request. Responding with a failure." );
       status = Protocol.FAILURE;
     }
-    LOG.debug(message);
+    LOG.debug( message );
     RegisterResponse response = new RegisterResponse( status, message );
     try
     {
@@ -245,7 +259,8 @@ public class Registry implements Node {
       message =
           "The node, " + nodeDetails + " had not previously been registered. ";
     }
-    if ( !nodeDetails.split( ":" )[0].equals( connectionIP ) )
+    if ( !nodeDetails.split( ":" )[0].equals( connectionIP )
+        && !connectionIP.equals( "localhost" ) )
     {
       message +=
           "There is a mismatch in the address that isspecified in request and "
@@ -337,6 +352,12 @@ public class Registry implements Node {
    * @param input foreground command from scanner input.
    */
   private void taskInitiate(String[] input) {
+    if ( connections.size() < 2 )
+    {
+      LOG.error( "There are " + connections.size()
+          + " connections in the overlay. A minimum of 2 is required to start sending messages." );
+      return;
+    }
     int rounds = 1;
     try
     {
@@ -374,8 +395,8 @@ public class Registry implements Node {
    */
   private void completedTaskHandler() {
     receivedCompletedTasks.getAndIncrement();
-    LOG.debug( "TASK HANDLER: " + receivedCompletedTasks.toString()
-        + " , " + Integer.toString( connections.size() ) );
+    LOG.debug( "TASK HANDLER: " + receivedCompletedTasks.toString() + " , "
+        + Integer.toString( connections.size() ) );
     if ( receivedCompletedTasks.get() == connections.size() )
     {
       try
