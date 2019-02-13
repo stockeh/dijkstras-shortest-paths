@@ -61,7 +61,7 @@ public class StatisticsCollectorAndDisplay {
     long totalReceivedSummation = 0;
 
     System.out.println(
-        String.format( "\n%1$15s %2$10s %3$10s %4$15s %5$15s %6$10s", "",
+        String.format( "\n%1$20s %2$12s %3$10s %4$15s %5$15s %6$10s", "",
             "Sent", "Received", "Sigma Sent", "Sigma Received", "Relayed" ) );
     for ( TaskSummaryResponse summary : statisticsSummary )
     {
@@ -71,7 +71,7 @@ public class StatisticsCollectorAndDisplay {
       totalSentSummation += summary.getSendSummation();
       totalReceivedSummation += summary.getReceiveSummation();
     }
-    System.out.println( String.format( "%1$15s %2$10s %3$10s %4$15s %5$15s\n",
+    System.out.println( String.format( "%1$20s %2$12s %3$10s %4$15s %5$15s\n",
         "Total Sum:", Integer.toString( totalSent ),
         Integer.toString( totalReceived ), Long.toString( totalSentSummation ),
         Long.toString( totalReceivedSummation ) ) );

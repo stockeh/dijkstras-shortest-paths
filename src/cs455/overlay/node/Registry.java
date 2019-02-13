@@ -187,8 +187,7 @@ public class Registry implements Node {
       TCPConnection connection, final boolean register) {
     String nodeDetails = (( Register ) event).getConnection();
     String message = registerStatusMessage( nodeDetails, connection.getSocket()
-        .getRemoteSocketAddress().toString().split( ":" )[0].substring( 1 ),
-        register );
+        .getInetAddress().getHostName().split("\\.")[0], register );
     byte status;
     if ( message.length() == 0 )
     {
@@ -205,9 +204,10 @@ public class Registry implements Node {
       status = Protocol.SUCCESS;
     } else
     {
+      LOG.error( "Unable to process request. Responding with a failure." );
       status = Protocol.FAILURE;
     }
-
+    LOG.debug(message);
     RegisterResponse response = new RegisterResponse( status, message );
     try
     {
@@ -232,6 +232,8 @@ public class Registry implements Node {
    */
   private String registerStatusMessage(String nodeDetails, String connectionIP,
       final boolean register) {
+    LOG.debug( "Node Details : " + nodeDetails );
+    LOG.debug( "Connection IP: " + connectionIP );
     String message = "";
     if ( connections.containsKey( nodeDetails ) && register )
     {
@@ -243,9 +245,7 @@ public class Registry implements Node {
       message =
           "The node, " + nodeDetails + " had not previously been registered. ";
     }
-    // TODO: Check IP LOG.debug( "Connection IP: " + connectionIP );
-    if ( !nodeDetails.split( ":" )[0].equals( connectionIP )
-        && !connectionIP.equals( "127.0.0.1" ) )
+    if ( !nodeDetails.split( ":" )[0].equals( connectionIP ) )
     {
       message +=
           "There is a mismatch in the address that isspecified in request and "
