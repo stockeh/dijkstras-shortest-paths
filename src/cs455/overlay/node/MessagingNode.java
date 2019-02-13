@@ -1,6 +1,7 @@
 package cs455.overlay.node;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
@@ -94,7 +95,7 @@ public class MessagingNode implements Node, Protocol {
       // TODO: check host address
       // InetAddress.getLocalHost().getHostAddress()
       MessagingNode node = new MessagingNode(
-          serverSocket.getInetAddress().getHostName(), nodePort );
+          InetAddress.getLocalHost().getHostName(), nodePort );
       (new Thread( new TCPServerThread( node, serverSocket ) )).start();
       node.registerNode( args[0], Integer.valueOf( args[1] ) );
       node.interact();

@@ -152,7 +152,7 @@ public class TaskSummaryResponse implements Event {
    * Convert the statistics summary response to a readable text format.
    */
   public String toString() {
-    return String.format( "%1$15s %2$10s %3$10s %4$15s %5$15s %6$10s",
+    return String.format( "%1$20s %2$12s %3$10s %4$15s %5$15s %6$10s",
         host + ":" + Integer.toString( port ), Integer.toString( sendTracker ),
         Integer.toString( receiveTracker ), Long.toString( sendSummation ),
         Long.toString( receiveSummation ), Integer.toString( relayTracker ) );
