@@ -124,8 +124,8 @@ public class Registry implements Node {
           } else
           {
             System.out.println(
-                "\nThere are " + connections.size() + " total links" );
-            connections.forEach( (k, v) -> System.out.println( k ) );
+                "\nThere are " + connections.size() + " total links:\n" );
+            connections.forEach( (k, v) -> System.out.println( "\t" + k ) );
             System.out.println();
           }
           break;

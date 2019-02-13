@@ -1,17 +1,30 @@
 #!/bin/bash
-
+  
 DIR="$( cd "$( dirname "$0" )" && pwd )"
-registry=phoenix
-registry_port=5001
+LOC="$DIR/build/classes/java/main"
+COMPILE="$( ps -ef | grep [c]s455.overlay.node.Registry )"
 
-gradle clean; gradle build;
+HOST=phoenix
+PORT=5001
 
-dbus-launch gnome-terminal --geometry=105x72 -x bash -c "cd ${DIR}/build/classes/java/main; java cs455.overlay.node.Registry ${registry_port}"
+SCRIPT="cd $LOC; java -cp . cs455.overlay.node.MessagingNode $HOST $PORT"
 
-sleep 2
-
-for i in `cat machine_list`;
-do
-	echo 'logging into '${i}
-	dbus-launch gnome-terminal -x bash -c "ssh -t ${i} 'cd ${DIR}/build/classes/java/main; java cs455.overlay.node.MessagingNode ${registry} ${registry_port};bash;'" &
-done
+if [ -z "$COMPILE" ]
+then
+LINES=`find . -name "*.java" -print | xargs wc -l | grep "total" | awk '{$1=$1};1'`
+    echo Project has "$LINES" lines
+    gradle clean; gradle build
+    gnome-terminal --geometry=132x43 -- bash -c "pushd $LOC; java -cp . cs455.overlay.node.Registry $PORT; popd; bash;"
+else
+    for ((j=0; j<${1:-1}; j++))
+    do
+        COMMAND='gnome-terminal'
+        for i in `cat machine_list`
+        do
+            echo 'logging into '$i
+            OPTION='--tab -e "ssh -t '$i' '$SCRIPT'"'
+            COMMAND+=" $OPTION"
+        done
+        eval $COMMAND &
+    done
+fi
