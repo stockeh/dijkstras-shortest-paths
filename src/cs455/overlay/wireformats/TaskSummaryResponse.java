@@ -82,11 +82,11 @@ public class TaskSummaryResponse implements Event {
     this.type = Protocol.TRAFFIC_SUMMARY;
     this.host = host;
     this.port = port;
-    this.sendTracker = stats.sendTracker.get();
-    this.sendSummation = stats.sendSummation.get();
-    this.receiveTracker = stats.receiveTracker.get();
-    this.receiveSummation = stats.receiveSummation.get();
-    this.relayTracker = stats.relayTracker.get();
+    this.sendTracker = stats.getSendTracker();
+    this.sendSummation = stats.getSendSummation();
+    this.receiveTracker = stats.getReceiveTracker();
+    this.receiveSummation = stats.getReceiveSummation();
+    this.relayTracker = stats.getRelayTracker();
   }
 
   public int getSendTracker() {

@@ -328,12 +328,11 @@ public class MessagingNode implements Node, Protocol {
       {
         int position = 0;
         int payload = random.nextInt();
-        statistics.sendSummation.getAndAdd( payload );
         try
         {
           Message msg = new Message( payload, ++position, routingPath );
           connection.getTCPSenderThread().sendData( msg.getBytes() );
-          statistics.sendTracker.getAndIncrement();
+          statistics.send(payload);
         } catch ( IOException | InterruptedException e )
         {
           LOG.error( e.getMessage() );
@@ -377,8 +376,7 @@ public class MessagingNode implements Node, Protocol {
     if ( routingPath.length == position )
     {
       LOG.debug( "RECEIVED" );
-      statistics.receiveTracker.getAndIncrement();
-      statistics.receiveSummation.getAndAdd( msg.getPayload() );
+      statistics.received( msg.getPayload() );
     } else
     {
       TCPConnection connection = connections.get( routingPath[position] );
@@ -387,7 +385,7 @@ public class MessagingNode implements Node, Protocol {
       {
         LOG.debug( "FORWARDING to: " + routingPath[position] );
         connection.getTCPSenderThread().sendData( msg.getBytes() );
-        statistics.relayTracker.getAndIncrement();
+        statistics.forward();
       } catch ( IOException | InterruptedException e )
       {
         LOG.error( e.getMessage() );

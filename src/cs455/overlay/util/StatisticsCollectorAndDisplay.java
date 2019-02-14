@@ -20,16 +20,52 @@ public class StatisticsCollectorAndDisplay {
    */
   private static final Logger LOG = new Logger( true, true );
 
-  public AtomicInteger sendTracker;
+  private AtomicInteger sendTracker;
 
-  public AtomicInteger receiveTracker;
+  private AtomicInteger receiveTracker;
 
-  public AtomicInteger relayTracker;
+  private AtomicInteger relayTracker;
 
-  public AtomicLong sendSummation;
+  private AtomicLong sendSummation;
 
-  public AtomicLong receiveSummation;
+  private AtomicLong receiveSummation;
 
+
+  /**
+   * @return the sendTracker
+   */
+  public int getSendTracker() {
+    return sendTracker.get();
+  }
+
+  /**
+   * @return the receiveTracker
+   */
+  public int getReceiveTracker() {
+    return receiveTracker.get();
+  }
+
+  /**
+   * @return the relayTracker
+   */
+  public int getRelayTracker() {
+    return relayTracker.get();
+  }
+
+  /**
+   * @return the sendSummation
+   */
+  public long getSendSummation() {
+    return sendSummation.get();
+  }
+
+  /**
+   * @return the receiveSummation
+   */
+  public long getReceiveSummation() {
+    return receiveSummation.get();
+  }
+  
   /**
    * Default constructor - initialize the atomic variables with an
    * initial value of 0.
@@ -40,6 +76,20 @@ public class StatisticsCollectorAndDisplay {
     this.relayTracker = new AtomicInteger( 0 );
     this.sendSummation = new AtomicLong( 0 );
     this.receiveSummation = new AtomicLong( 0 );
+  }
+
+  public void send(int payload) {
+    this.sendSummation.getAndAdd( payload );
+    this.sendTracker.getAndIncrement();
+  }
+
+  public void received(int payload) {
+    this.receiveSummation.getAndAdd( payload );
+    this.receiveTracker.getAndIncrement();
+  }
+
+  public void forward() {
+    this.relayTracker.getAndIncrement();
   }
 
   /**
