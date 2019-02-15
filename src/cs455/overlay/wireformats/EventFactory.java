@@ -17,9 +17,9 @@ public class EventFactory {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private final static Logger LOG = new Logger( true, true );
+  private static final Logger LOG = new Logger( true, true );
 
-  private static EventFactory instance = null;
+  private static final EventFactory instance = new EventFactory();
 
   /**
    * Default constructor - Exists only to defeat instantiation.
@@ -32,11 +32,7 @@ public class EventFactory {
    * 
    * @return Returns the instance for the class
    */
-  public static final EventFactory getInstance() {
-    if ( instance == null )
-    {
-      instance = new EventFactory();
-    }
+  public static EventFactory getInstance() {
     return instance;
   }
 

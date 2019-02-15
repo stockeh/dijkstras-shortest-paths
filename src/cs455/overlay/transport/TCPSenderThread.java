@@ -38,7 +38,7 @@ public class TCPSenderThread implements Runnable {
    * @throws IOException
    */
   public TCPSenderThread(Socket socket) throws IOException {
-    final int defaultQueueSize = 100;
+    final int defaultQueueSize = 500;
     this.queue = new LinkedBlockingQueue<>( defaultQueueSize );
     this.dout = new DataOutputStream( socket.getOutputStream() );
   }
