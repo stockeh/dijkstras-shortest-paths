@@ -3,20 +3,24 @@
 
 The purpose of this application is to explore distributed development by constructing a logical overlay over a distributed set of nodes, and computing shortest paths using Dijkstra’s algorithm to route packets throughout the system.
 
-The overlay is constructed with a single **registry** that will manage an array of *N* **messaging nodes**.  Each messaging nodes will be connected to *k* other messaging nodes with bidirectional links.
+The overlay is constructed with a single **Registry** that will manage an array of *N* **Messaging Nodes**.  Each messaging nodes will be connected to *k* other messaging nodes with bidirectional links.
 
-Once the overlay has been setup, messaging nodes in the system will repeatedly select a random *sink node* to send a message too.  The overlay is constructed following a *k*-regular graph of order *N*, such that a source node will use the overlay for computation by forwarding packets to zero or more intermediary nodes.  This construction is specified by an arbitrary collection of link weights that are established between each link.  All communication between the messaging nodes and registry are done over TCP, and implemented in full in the various Java packages.
+Once the overlay has been setup, messaging nodes in the system will repeatedly select a random *sink node* to send a message too.  The overlay is constructed following a *k*-regular graph of order *N*, such that a source node will use the overlay for computation by forwarding packets to zero or more intermediary nodes.  This construction is specified by an arbitrary collection of link weights that are established between each link.  All communication between the messaging nodes and Registry are done over TCP, and implemented in full in the various Java packages.
+
+![](animation.gif)
+
+*NOTE:* the above GIF displays the execution of spawning a Registry, followed by six messaging nodes on a single local machine. The Registry displays the connections, creates the network overlay, sends the connection details, and then commands the messaging nodes to each send 1000 rounds of messages. Execution details are defined in the **Startup** section of this README.
 
 ## Components  
 ### Registry
-There is exactly one registry in the system. The registry provides the following functions:  
+There is exactly one Registry in the system which provides the following functions:  
 * Allows messaging nodes to register themselves. This is performed when a messaging node starts up for the first time.  
 * Allows messaging nodes to deregister themselves. This is performed when a messaging node leaves the overlay.  
-* Enables the construction of the overlay by orchestrating connections that a messaging node initiates with other messaging nodes in the system. Based on its knowledge of the messaging nodes (through function A) the registry informs messaging nodes about the other messaging nodes that they should connect to.  
+* Enables the construction of the overlay by orchestrating connections that a messaging node initiates with other messaging nodes in the system. Based on its knowledge of the messaging nodes (through function A) the Registry informs messaging nodes about the other messaging nodes that they should connect to.  
 * Assign and publish weights to the links connecting any two messaging nodes in the overlay. The weights these links take will range from 1-10.  
   
 ### Messaging Node 
-Unlike the registry, there are multiple messaging nodes in the system.  A messaging node provides two closely related functions; it initiates and accepts both communications and messages within the system.
+Unlike the Registry, there are multiple messaging nodes in the system.  A messaging node provides two closely related functions; it initiates and accepts both communications and messages within the system.
 
 Communications that nodes have with each other are based on TCP. Each messaging node is automatically configure to a ports over which it listens for communications.  
 
@@ -87,7 +91,7 @@ Gradle is used for build automation, and can be executing manually with ```gradl
 
 Once the Registry is started on the `registry-host`, multiple Messaging Nodes can be instantiated on multiple or single machine. Each TCP connection will be mapped to a unique open port for robustness. To simplify the process of instantiating multiple instances, one of the provided run scripts can be used.  The `osx.sh` script is designed to be executed on MacOS, and the `run.sh` script is used for Linux (but configured to run in the lab at Colorado State University). Execution of the two scripts are nearly identical, but with subtle differences.
 
-Within each of these scripts, it is possible to configure the **registry-host** and **registry-port** to start the registry on.  It is important that the registry, and thus the startup scripts be executed on the defined host, with an associated open port.
+Within each of these scripts, it is possible to configure the **registry-host** and **registry-port** to start the Registry on.  It is important that the Registry, and thus the startup scripts be executed on the defined host, with an associated open port.
 
 ### MacOS
 Open up a terminal in the working directory of the project;
