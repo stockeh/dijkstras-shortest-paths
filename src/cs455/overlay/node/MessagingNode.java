@@ -92,8 +92,6 @@ public class MessagingNode implements Node, Protocol {
     try ( ServerSocket serverSocket = new ServerSocket( 0 ) )
     {
       int nodePort = serverSocket.getLocalPort();
-      // TODO: check host address
-      // InetAddress.getLocalHost().getHostAddress()
       MessagingNode node = new MessagingNode(
           InetAddress.getLocalHost().getHostName(), nodePort );
       (new Thread( new TCPServerThread( node, serverSocket ) )).start();

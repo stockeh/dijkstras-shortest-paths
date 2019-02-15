@@ -105,7 +105,7 @@ public class Registry implements Node {
     while ( true )
     {
       String line = scan.nextLine().toLowerCase();
-      String[] input = line.split( " " );
+      String[] input = line.split( "\\s+" );
       switch ( input[0] )
       {
         case SETUP_OVERLAY :
@@ -379,6 +379,7 @@ public class Registry implements Node {
         // TODO: Return if unable to send to one connection?
       }
     } );
+    System.out.println( "\nPlease allow time for message(s) to be sent." );
   }
 
   /**
