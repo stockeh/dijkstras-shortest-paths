@@ -80,6 +80,13 @@ public class MessagingNodeList implements Event {
 
   /**
    * 
+   * @return the number of peers that are being connected too.
+   */
+  public int getNumPeers() {
+    return numPeers;
+  }
+  /**
+   * 
    * @return The peers for this given node. May be empty or
    *         uninitialized.
    */

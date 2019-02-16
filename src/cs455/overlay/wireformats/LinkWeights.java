@@ -34,6 +34,8 @@ public class LinkWeights implements Event {
    */
   private String[] links;
 
+  private boolean weightsSent = false;
+
   /**
    * Default constructor - create a new link weight object with the
    * links between nodes
@@ -98,6 +100,26 @@ public class LinkWeights implements Event {
 
     inputStream.close();
     din.close();
+  }
+
+  /**
+   * Check if the weights have been sent to the overlay.
+   * 
+   * @return true if weights have been sent to the messaging nodes,
+   *         false otherwise.
+   */
+  public boolean areWeightsSent() {
+    return weightsSent;
+  }
+
+  /**
+   * Update to reflect if the weights have been sent to the messaging
+   * nodes.
+   * 
+   * @param weightsSent
+   */
+  public void setWeightsSent(boolean weightsSent) {
+    this.weightsSent = weightsSent;
   }
 
   /**

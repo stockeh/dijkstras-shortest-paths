@@ -143,7 +143,7 @@ public class OverlayCreator {
       int numPeers = peers.size();
 
       MessagingNodeList message = new MessagingNodeList( numPeers, peers );
-
+      LOG.debug( message.toString() );
       topology[i].getConnection().getTCPSenderThread()
           .sendData( message.getBytes() );
     }

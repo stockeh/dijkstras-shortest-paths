@@ -22,6 +22,7 @@ import cs455.overlay.wireformats.Message;
 import cs455.overlay.wireformats.MessagingNodeList;
 import cs455.overlay.wireformats.Protocol;
 import cs455.overlay.wireformats.Register;
+import cs455.overlay.wireformats.RegisterResponse;
 import cs455.overlay.wireformats.TaskComplete;
 import cs455.overlay.wireformats.TaskInitiate;
 import cs455.overlay.wireformats.TaskSummaryResponse;
@@ -139,7 +140,7 @@ public class MessagingNode implements Node, Protocol {
   @SuppressWarnings( "resource" )
   private void interact() {
     LOG.info(
-        "Input a command to interact with processes.  Input 'help' for a list of commands." );
+        "Input a command to interact with processes. Input 'help' for a list of commands." );
     boolean running = true;
     while ( running )
     {
@@ -200,6 +201,10 @@ public class MessagingNode implements Node, Protocol {
     LOG.debug( event.toString() );
     switch ( event.getType() )
     {
+      case Protocol.REGISTER_RESPONSE :
+        System.out.println( (( RegisterResponse ) event).toString() );
+        break;
+
       case Protocol.MESSAGING_NODE_LIST :
         establishOverlayConnections( event );
         break;
@@ -236,7 +241,8 @@ public class MessagingNode implements Node, Protocol {
    * @param event
    */
   private void establishOverlayConnections(Event event) {
-    List<String> peers = (( MessagingNodeList ) event).getPeers();
+    MessagingNodeList msg = ( MessagingNodeList ) event;
+    List<String> peers = msg.getPeers();
 
     for ( String peer : peers )
     {
@@ -268,6 +274,9 @@ public class MessagingNode implements Node, Protocol {
         e.printStackTrace();
       }
     }
+    int numberOfPeers = msg.getNumPeers();
+    System.out.println( "\nFinished establishing ("
+        + Integer.toString( numberOfPeers ) + ") connections.\n" );
   }
 
   /**
@@ -330,7 +339,7 @@ public class MessagingNode implements Node, Protocol {
         {
           Message msg = new Message( payload, ++position, routingPath );
           connection.getTCPSenderThread().sendData( msg.getBytes() );
-          statistics.send(payload);
+          statistics.send( payload );
         } catch ( IOException | InterruptedException e )
         {
           LOG.error( e.getMessage() );
@@ -403,7 +412,7 @@ public class MessagingNode implements Node, Protocol {
     if ( routes == null )
     {
       LOG.error( "Link weights have not yet been received from registry."
-          + "Unable to display the shortest paths." );
+          + " Unable to display the shortest paths." );
     } else
     {
       try
