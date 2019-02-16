@@ -117,28 +117,11 @@ public class Registry implements Node {
           break;
 
         case LIST_MSG_NODES :
-          if ( connections.size() == 0 )
-          {
-            LOG.error(
-                "There are no connections in the registry. Initialize new messaging nodes." );
-          } else
-          {
-            System.out.println(
-                "\nThere are " + connections.size() + " total links:\n" );
-            connections.forEach( (k, v) -> System.out.println( "\t" + k ) );
-            System.out.println();
-          }
+          displayMessagingNodes();
           break;
 
         case LIST_WEIGHTS :
-          if ( linkWeights == null )
-          {
-            LOG.error( "The overlay has not yet been configured." );
-
-          } else
-          {
-            System.out.println( linkWeights.toString() );
-          }
+          displayLinkWeights();
           break;
 
         case START :
@@ -146,12 +129,7 @@ public class Registry implements Node {
           break;
 
         case HELP :
-          System.out.println(
-              "\n\tlist-messaging-nodes\t\t: show the nodes connected with the overlay.\n\n"
-                  + "\tsetup-overlay k\t\t\t: setup a k-regular graph of order N.\n\n"
-                  + "\tlist-weights\t\t\t: display the link weights associated with the network topology.\n\n"
-                  + "\tsend-overlay-link-weights\t: send the topology overlay weights to the connected nodes.\n\n"
-                  + "\tstart r\t\t\t\t: notify the connected nodes to initialize r rounds of message sending.\n" );
+          displayHelpMessage();
           break;
 
         default :
@@ -213,8 +191,8 @@ public class Registry implements Node {
         connections.remove( nodeDetails );
       }
       message =
-          "Registration request successful.  The number of messaging nodes currently "
-              + "constituting the overlay is (" + connections.size() + ").";
+          "\nRegistration request successful.  The number of messaging nodes currently "
+              + "constituting the overlay is (" + connections.size() + ").\n";
       status = Protocol.SUCCESS;
     } else
     {
@@ -278,6 +256,12 @@ public class Registry implements Node {
    * @param input The arguments passed by the command line interpreter
    */
   private void setupOverlay(String[] input) {
+    if ( linkWeights != null )
+    {
+      LOG.error(
+          "Unable to recreate as a network overlay as one has already been established." );
+      return;
+    }
     int connectingEdges = connections.size() < 5 ? connections.size() - 1 : 4;
     try
     {
@@ -297,8 +281,8 @@ public class Registry implements Node {
           + "\nUnable to send overlay information to connection." );
       return;
     }
-    System.out.println( "\nOverlay configuration has been sent to the "
-        + connections.size() + " connections in the network.\n" );
+    System.out.println( "\nOverlay configuration has been sent to the ("
+        + connections.size() + ") connections in the network.\n" );
   }
 
   /**
@@ -313,7 +297,13 @@ public class Registry implements Node {
     if ( linkWeights == null )
     {
       LOG.error(
-          "The overlay has not yet been configured, and there are no link wieghts" );
+          "The overlay has not yet been configured, and there are no link weights." );
+      return;
+    }
+    if ( linkWeights.areWeightsSent() )
+    {
+      LOG.error(
+          "Link have already been delievered. Ready to initiate sending messages." );
       return;
     }
     connections.forEach( (k, v) ->
@@ -328,8 +318,9 @@ public class Registry implements Node {
         return;
       }
     } );
-    System.out.println( "\nOverlay Link Weights have been sent to the "
-        + connections.size() + " connections in the network.\n" );
+    System.out.println( "\nOverlay Link Weights have been sent to the ("
+        + connections.size() + ") connections in the network.\n" );
+    linkWeights.setWeightsSent( true );
   }
 
   /**
@@ -356,6 +347,18 @@ public class Registry implements Node {
     {
       LOG.error( "There are " + connections.size()
           + " connections in the overlay. A minimum of 2 is required to start sending messages." );
+      return;
+    }
+    if ( linkWeights == null )
+    {
+      LOG.error(
+          "The overlay has not yet been configured, and no messages could be sent." );
+      return;
+    }
+    if ( !linkWeights.areWeightsSent() )
+    {
+      LOG.error(
+          "The link weights have not yet been sent to the connected nodes, and no messages could be sent." );
       return;
     }
     int rounds = 1;
@@ -441,5 +444,52 @@ public class Registry implements Node {
       (new StatisticsCollectorAndDisplay()).display( statisticsSummary );
       statisticsSummary.clear();
     }
+  }
+
+  /**
+   * Print out all of the clink weights in the overlay. Display an error
+   * message if the overlay has not been configured.
+   */
+  private void displayLinkWeights() {
+    if ( linkWeights == null || connections.size() < 2 )
+    {
+      LOG.error(
+          "The overlay has not yet been configured, and there are no link weights." );
+
+    } else
+    {
+      System.out.println( linkWeights.toString() );
+    }
+  }
+
+  /**
+   * Print out all of the connected Messaging Nodes that have connected.
+   * If no nodes are connected, display an error message.
+   */
+  private void displayMessagingNodes() {
+    if ( connections.size() == 0 )
+    {
+      LOG.error(
+          "There are no connections in the registry. Initialize new messaging nodes." );
+    } else
+    {
+      System.out
+          .println( "\nThere are " + connections.size() + " total links:\n" );
+      connections.forEach( (k, v) -> System.out.println( "\t" + k ) );
+      System.out.println();
+    }
+  }
+
+  /**
+   * Print a message containing the list of foreground commands and
+   * details to their functionality.
+   */
+  private void displayHelpMessage() {
+    System.out.println(
+        "\n\tlist-messaging-nodes\t\t: show the nodes connected with the overlay.\n\n"
+            + "\tsetup-overlay k\t\t\t: setup a k-regular graph of order N.\n\n"
+            + "\tlist-weights\t\t\t: display the link weights associated with the network topology.\n\n"
+            + "\tsend-overlay-link-weights\t: send the topology overlay weights to the connected nodes.\n\n"
+            + "\tstart r\t\t\t\t: notify the connected nodes to initialize r rounds of message sending.\n" );
   }
 }

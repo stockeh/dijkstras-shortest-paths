@@ -98,12 +98,13 @@ public class RegisterResponse implements Event {
   }
 
   /**
+   * Display the information associated with the registration response
+   * 
    * {@inheritDoc}
    */
   @Override
   public String toString() {
-    return Integer.toString( type ) + " " + Byte.toString( status ) + " "
-        + info;
+    return info;
   }
 
 }
