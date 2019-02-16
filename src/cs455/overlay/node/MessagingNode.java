@@ -6,11 +6,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 import cs455.overlay.dijkstra.RoutingCache;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
@@ -54,7 +54,7 @@ public class MessagingNode implements Node, Protocol {
 
   private RoutingCache routes = null;
 
-  private Map<String, TCPConnection> connections = new HashMap<>();
+  private Map<String, TCPConnection> connections = new ConcurrentHashMap<>();
 
   private Integer nodePort;
 
@@ -286,8 +286,7 @@ public class MessagingNode implements Node, Protocol {
    * @param event
    * @param connection
    */
-  private synchronized void acknowledgeNewConnection(Event event,
-      TCPConnection connection) {
+  private void acknowledgeNewConnection(Event event, TCPConnection connection) {
     String nodeDetails = (( Register ) event).getConnection();
     connections.put( nodeDetails, connection );
   }

@@ -68,14 +68,25 @@ public class OverlayCreator {
 
     LinkWeights linkWeights = new LinkWeights( topology );
 
-    // TODO: Catch IOException ?
     disperseConnections( topology );
 
     return linkWeights;
   }
 
   /**
-   * Construct the topology for the overlay for each connection
+   * Construct the topology for the overlay for each connection. It is
+   * important that the overlay is constructed following a k-regular
+   * graph.
+   * 
+   * Let k = connectingEdges, n = number of connections, there exits
+   * some integer m :
+   * 
+   * If k = 2m is even, put all the nodes around a circle, and join each
+   * to its m nearest neighbors on either side. {@link joinNeighbors}
+   * 
+   * If k = 2m + 1 is odd, and n is even, put the nodes on a circle,
+   * join each to its m nearest neighbors on each side, and also to the
+   * node directly opposite. {@link joinOpposite}
    * 
    * @param connections the total messaging node connections
    * @param connectingEdges the number of edges ( links ) to have
@@ -93,39 +104,84 @@ public class OverlayCreator {
     {
       String address = entry.getKey();
       addresses[index] = address;
-
-      topology[index] = new OverlayNode( entry.getValue(), address );
-
-      ++index;
-      // May be able to add A<-B<-C<-D here
+      topology[index++] = new OverlayNode( entry.getValue(), address );
     }
-    for ( int node = 0; node < totalConnections - 1; node++ )
-    {
-      topology[node].add( addresses[node + 1] );
-      topology[node + 1].update( addresses[node] );
-    }
-
+    // Default to creating a connecting ring between the nodes.
     for ( int node = 0; node < totalConnections; node++ )
     {
-      for ( int peer = 0; peer < totalConnections; peer++ )
-      {
-        String address = addresses[peer];
+      topology[node].add( addresses[(node + 1) % totalConnections] );
+    }
+    joinNeighbors( addresses, topology, connectingEdges, totalConnections );
 
-        if ( !topology[node].contains( address )
-            && topology[node].size() < connectingEdges
-            && topology[peer].size() < connectingEdges )
+    if ( connectingEdges % 2 == 1 )
+    {
+      joinOpposite( addresses, topology, connectingEdges, totalConnections );
+    }
+
+    return topology;
+  }
+
+  /**
+   * Join each node to its m nearest neighbors on either side.
+   * 
+   * @param addresses array of node identifiers
+   * @param topology array of OverlayNodes that is being constructed
+   * @param connectingEdges the number of edges ( links ) to have
+   *        between each connection for a bidirectional graph
+   * @param totalConnections the total number of messaging nodes
+   */
+  private void joinNeighbors(String[] addresses, OverlayNode[] topology,
+      int connectingEdges, int totalConnections) {
+    int spacing = 2;
+    for ( int links = 1; links < connectingEdges / 2; links++ )
+    {
+      for ( int node = 0; node < totalConnections; node++ )
+      {
+        int forwardPeer = (node + spacing) % totalConnections;
+        String forwardAddress = addresses[forwardPeer];
+
+        if ( !topology[node].contains( forwardAddress ) )
         {
-          topology[node].add( address );
-          topology[peer].update( addresses[node] );
+          topology[node].add( forwardAddress );
+          topology[forwardPeer].update( addresses[node] );
+        }
+        int backwardPeer =
+            (node + totalConnections - spacing) % totalConnections;
+        String backwardAddress = addresses[backwardPeer];
+
+        if ( !topology[node].contains( backwardAddress ) )
+        {
+          topology[node].add( backwardAddress );
+          topology[backwardPeer].update( addresses[node] );
         }
       }
+      ++spacing;
     }
+  }
 
-    for ( int i = 0; i < totalConnections; i++ )
+  /**
+   * The number of connecting edges is odd, thus the node opposing each
+   * will be connected.
+   * 
+   * @param addresses array of node identifiers
+   * @param topology array of OverlayNodes that is being constructed
+   * @param connectingEdges the number of edges ( links ) to have
+   *        between each connection for a bidirectional graph
+   * @param totalConnections the total number of messaging nodes
+   */
+  private void joinOpposite(String[] addresses, OverlayNode[] topology,
+      int connectingEdges, int totalConnections) {
+    int midpoint = totalConnections / 2;
+    for ( int node = 0; node < totalConnections; node++ )
     {
-      LOG.debug( topology[i].toString() );
+      int peer = (node + midpoint) % totalConnections;
+      String peerAddress = addresses[peer];
+      if ( !topology[node].contains( peerAddress ) )
+      {
+        topology[node].add( peerAddress );
+        topology[peer].update( addresses[node] );
+      }
     }
-    return topology;
   }
 
   /**
