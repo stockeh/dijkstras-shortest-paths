@@ -38,12 +38,12 @@ single machine. Each TCP connection will be mapped to a unique open port for rob
 ——————STARTUP——————
 
 To simplify the process of instantiating multiple instances, the provided run script can be used. Within this script,
-it is possible to configure the 'registry-host' and 'registry-port' to start the Registry on. It is important that 
-the Registry, and thus the startup script be executed on the defined host, with an associated open port.
+it is possible to configure the 'registry-host' and 'registry-port' to start the Registry on. There is a default for 
+these values, but can be changed.
 
-	1. Open the 'run.sh' script, and modify the 'registry-host' and 'registry-port' of the Registry
+	1. (Optional) modify the 'registry-host' and 'registry-port' of the Registry
 
-		HOST=phoenix
+		HOST=atlanta
 		PORT=5001
 	
 	2. Add or remove desired Messaging Nodes to the application. Each machine should be on a new line,
@@ -51,16 +51,10 @@ the Registry, and thus the startup script be executed on the defined host, with 
 
 		vim machine_list
 
-	3. Using the terminal, execute the run script to start the Registry
+	3. Using the terminal, execute the run script to start the Registry and Messaging Nodes. (Optional) add an
+	argument, integer, to launch more than one instance on a given host.
 
 		./run.sh
-	
-	4. A new gnome-terminal, on the current host, will open and launch the Registry.
-
-	5. Now, to spawn the Messaging Nodes, in the original terminal, execute the 'run.sh' script again.
-	Another new gnome-terminal will open with a tab corresponding to that specific node instance.
-
-		./run.sh 
 
 At this point, there will be three terminals open; the original terminal, gnome-terminal for the Registry, and a 
 gnome-terminal with tabs for each Messaging Node instance.

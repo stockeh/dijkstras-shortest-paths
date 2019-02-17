@@ -118,7 +118,14 @@ cs455.overlay.node.MessagingNode(interact:141) [INFO] - Input a command to inter
 At this point, there will be two terminals open; one dedicated to the Registry, and another with tabs corresponding to each Messaging Node Instance. 
 
 ### Linux
-Open up a terminal on the host specified the `run.sh` script.  From the working directory of the project;
+(Optional) modify the 'registry-host' and 'registry-port' of the Registry. 
+```console
+HOST=atlanta
+PORT=5001
+```
+Add or remove desired Messaging Nodes to the application by editing the `machine_list`. Each machine should be on a new line, and can all be unique or the same.
+
+Using the terminal, execute the run script to start the Registry and Messaging Nodes. (Optional) add an argument, integer, to launch more than one instance on a given host.
 ```console
 mars:dijkstras-shortest-paths$ ./run.sh 
 Project has 3357 total lines
@@ -129,14 +136,14 @@ BUILD SUCCESSFUL in 0s
 BUILD SUCCESSFUL in 0s
 2 actionable tasks: 2 executed
 ```
-A new gnome-terminal, on the current host, will open and launch the Registry.  The following message will be shown:
+A new gnome-terminal, on the specified 'registry-host', will open and launch the Registry.  The following message will be shown:
 
 ```console
 mars:dijkstras-shortest-paths$
 cs455.overlay.node.Registry(main:80) [INFO] - Registry starting up at: Thu Feb 14 20:04:41 MST 2019
 cs455.overlay.node.Registry(interact:102) [INFO] - Input a command to interact with processes.  Input 'help' for a list of commands.
 ```
-Now, to spawn the Messaging Nodes, in the original terminal, execute the `run.sh` script again.  Another new gnome-terminal will open with a tab corresponding to that specific node instance. At this point, there will be three terminals open; the original terminal, gnome-terminal for the Registry, and a gnome-terminal with tabs for each Messaging Node instance.
+At this point, there will be three terminals open; the original terminal, gnome-terminal for the Registry, and a gnome-terminal with tabs for each Messaging Node instance.
 
 ## Interactions
 Upon the Messaging Nodes launching, they will auto register themselves with the Registry.  It is now possible to configure the network overlay and begin sending messages between the nodes. The Registry and each Messaging Node will have a set of commands that can be executed in the foreground process.
