@@ -139,8 +139,8 @@ public class MessagingNode implements Node, Protocol {
    */
   @SuppressWarnings( "resource" )
   private void interact() {
-    LOG.info(
-        "Input a command to interact with processes. Input 'help' for a list of commands." );
+    System.out.println(
+        "\nInput a command to interact with processes. Input 'help' for a list of commands.\n" );
     boolean running = true;
     while ( running )
     {
@@ -275,7 +275,7 @@ public class MessagingNode implements Node, Protocol {
       }
     }
     int numberOfPeers = msg.getNumPeers();
-    System.out.println( "\nFinished establishing ("
+    System.out.println( "Finished establishing ("
         + Integer.toString( numberOfPeers ) + ") connections.\n" );
   }
 

@@ -9,8 +9,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * Register message type to initialize messaging node with the
- * registry.
+ * Register message type to initialize itself with another node.
+ * 
+ * This is a reusable class for registering, and deregistering
+ * messaging nodes with the registry. As well as connecting messaging
+ * nodes to other messaging nodes to construct the overlay.
  * 
  * @author stock
  *
@@ -45,7 +48,7 @@ public class Register implements Event {
     this.ipAddress = new String( ipBytes );
 
     this.port = din.readInt();
-    
+
     inputStream.close();
     din.close();
   }
