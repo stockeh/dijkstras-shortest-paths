@@ -5,20 +5,21 @@
 # This new window will spawn MULTI + 1 MessagingNodes.
 #
 
-PORT=5001
 HOST=localhost
+PORT=5001
 MULTI="1 2 3 4 5 6 7 8 9"
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 BUILD="$DIR/build/classes/java/main"
 COMPILE="$( ps -ef | grep [c]s455.overlay.node.Registry )"
 
+SCRIPT="cd $BUILD; java -cp . cs455.overlay.node.MessagingNode $HOST $PORT;"
+
 function new_tab() {
-    COMMAND="cd $DIR/src; java -cp $BUILD cs455.overlay.node.MessagingNode $HOST $PORT;"
     osascript \
         -e "tell application \"Terminal\"" \
         -e "tell application \"System Events\" to keystroke \"t\" using {command down}" \
-        -e "do script \"$COMMAND\" in front window" \
+        -e "do script \"$SCRIPT\" in front window" \
         -e "end tell" > /dev/null
 }
 
@@ -29,7 +30,7 @@ LINES=`find . -name "*.java" -print | xargs wc -l | grep "total" | awk '{$1=$1};
     gradle clean
     gradle build
     open -a Terminal .
-    cd $DIR/src; java cs455.overlay.node.Registry $PORT
+    pushd $BUILD; java -cp . cs455.overlay.node.Registry $PORT; popd;
 else
     if [ -n "$MULTI" ]
     then
@@ -38,6 +39,5 @@ else
             new_tab
         done
     fi
-# java -cp $BUILD ...
-    cd $DIR/src; java cs455.overlay.node.MessagingNode $HOST $PORT;
+    eval $SCRIPT
 fi

@@ -99,8 +99,8 @@ public class Registry implements Node {
    */
   @SuppressWarnings( "resource" )
   private void interact() {
-    LOG.info(
-        "Input a command to interact with processes.  Input 'help' for a list of commands." );
+    System.out.println(
+        "\nInput a command to interact with processes. Input 'help' for a list of commands.\n" );
     Scanner scan = new Scanner( System.in );
     while ( true )
     {
@@ -191,7 +191,7 @@ public class Registry implements Node {
         connections.remove( nodeDetails );
       }
       message =
-          "\nRegistration request successful.  The number of messaging nodes currently "
+          "Registration request successful.  The number of messaging nodes currently "
               + "constituting the overlay is (" + connections.size() + ").\n";
       status = Protocol.SUCCESS;
     } else
