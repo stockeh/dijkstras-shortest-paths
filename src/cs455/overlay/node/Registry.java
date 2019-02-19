@@ -80,9 +80,9 @@ public class Registry implements Node {
     LOG.info( "Registry starting up at: " + new Date() );
     Registry registry = new Registry();
     try ( ServerSocket serverSocket =
-        new ServerSocket( Integer.valueOf( args[0] ) ) )
+        new ServerSocket( Integer.valueOf( args[ 0 ] ) ) )
     {
-      (new Thread( new TCPServerThread( registry, serverSocket ) )).start();
+      ( new Thread( new TCPServerThread( registry, serverSocket ) ) ).start();
 
       registry.interact();
 
@@ -106,7 +106,7 @@ public class Registry implements Node {
     {
       String line = scan.nextLine().toLowerCase();
       String[] input = line.split( "\\s+" );
-      switch ( input[0] )
+      switch ( input[ 0 ] )
       {
         case SETUP_OVERLAY :
           setupOverlay( input );
@@ -176,10 +176,9 @@ public class Registry implements Node {
    */
   private synchronized void registrationHandler(Event event,
       TCPConnection connection, final boolean register) {
-    String nodeDetails = (( Register ) event).getConnection();
-    String message = registerStatusMessage( nodeDetails,
-        connection.getSocket().getInetAddress().getHostName().split( "\\." )[0],
-        register );
+    String nodeDetails = ( ( Register ) event ).getConnection();
+    String message = registerStatusMessage( nodeDetails, connection.getSocket()
+        .getInetAddress().getHostName().split( "\\." )[ 0 ], register );
     byte status;
     if ( message.length() == 0 )
     {
@@ -189,6 +188,8 @@ public class Registry implements Node {
       } else
       {
         connections.remove( nodeDetails );
+        System.out.println( "Deregistered " + nodeDetails + ". There are now ("
+            + connections.size() + ") connections.\n" );
       }
       message =
           "Registration request successful.  The number of messaging nodes currently "
@@ -207,7 +208,7 @@ public class Registry implements Node {
     } catch ( IOException | InterruptedException e )
     {
       LOG.error( e.getMessage() );
-      e.printStackTrace();
+      connections.remove( nodeDetails );
     }
   }
 
@@ -237,7 +238,7 @@ public class Registry implements Node {
       message =
           "The node, " + nodeDetails + " had not previously been registered. ";
     }
-    if ( !nodeDetails.split( ":" )[0].equals( connectionIP )
+    if ( !nodeDetails.split( ":" )[ 0 ].equals( connectionIP )
         && !connectionIP.equals( "localhost" ) )
     {
       message +=
@@ -265,7 +266,7 @@ public class Registry implements Node {
     int connectingEdges = connections.size() < 5 ? connections.size() - 1 : 4;
     try
     {
-      connectingEdges = Integer.parseInt( input[1] );
+      connectingEdges = Integer.parseInt( input[ 1 ] );
     } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
     {
       LOG.info( "Input did not contain a valid number of message connections. "
@@ -274,7 +275,7 @@ public class Registry implements Node {
     try
     {
       this.linkWeights =
-          (new OverlayCreator()).setupOverlay( connections, connectingEdges );
+          ( new OverlayCreator() ).setupOverlay( connections, connectingEdges );
     } catch ( Exception e )
     {
       LOG.error( e.getMessage()
@@ -364,7 +365,7 @@ public class Registry implements Node {
     int rounds = 1;
     try
     {
-      rounds = Integer.parseInt( input[1] );
+      rounds = Integer.parseInt( input[ 1 ] );
     } catch ( ArrayIndexOutOfBoundsException | NumberFormatException e )
     {
       LOG.info( "Input did not contain a valid number of rounds. "
@@ -397,7 +398,7 @@ public class Registry implements Node {
    * 
    * @param event
    */
-  private void completedTaskHandler() {
+  private synchronized void completedTaskHandler() {
     receivedCompletedTasks.getAndIncrement();
     LOG.debug( "TASK HANDLER: " + receivedCompletedTasks.toString() + " , "
         + Integer.toString( connections.size() ) );
@@ -441,7 +442,7 @@ public class Registry implements Node {
         + " , " + Integer.toString( connections.size() ) );
     if ( statisticsSummary.size() == connections.size() )
     {
-      (new StatisticsCollectorAndDisplay()).display( statisticsSummary );
+      ( new StatisticsCollectorAndDisplay() ).display( statisticsSummary );
       statisticsSummary.clear();
     }
   }

@@ -52,7 +52,7 @@ public class TaskSummaryResponse implements Event {
     this.type = din.readInt();
 
     int len = din.readInt();
-    byte[] hostBytes = new byte[len];
+    byte[] hostBytes = new byte[ len ];
     din.readFully( hostBytes );
 
     this.host = new String( hostBytes );

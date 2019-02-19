@@ -47,12 +47,12 @@ these values, but can be changed.
 		PORT=5001
 	
 	2. Add or remove desired Messaging Nodes to the application. Each machine should be on a new line,
-	and can all be unique or the same
+	   and can all be unique or the same
 
 		vim machine_list
 
 	3. Using the terminal, execute the run script to start the Registry and Messaging Nodes. (Optional) add an
-	argument, integer, to launch more than one instance on a given host.
+	   argument, integer, to launch more than one instance on a given host.
 
 		./run.sh
 
@@ -85,14 +85,16 @@ From within the Registry, or any instance of the Messaging Node, the 'help' comm
 
 ——————NOTES——————
 
-To allow all messages that are already in transit to reach their destination nodes, there is a 15 second delay after
-receiving all TASK_COMPLETE messages on the Registry before issuing a PULL_TRAFFIC_SUMMARY message.
+- To allow all messages that are already in transit to reach their destination nodes, there is a 15 second delay after
+  receiving all TASK_COMPLETE messages on the Registry before issuing a PULL_TRAFFIC_SUMMARY message.
 
-The Messaging Nodes will display a message after connecting to the Registry. Enter list-messaging-nodes to view
-connections on the Registry
+- Upon a Messaging Node leaving the overlay with 'exit-overlay' it will display its progress and fully terminate.
 
-Once the overlay is configured on the Registry, the the Messaging Nodes will begin to connect to their associated
-connections. The number of outgoing connections established per node is displayed - this number can very.
+- The Messaging Nodes will display a message after connecting to the Registry. Enter list-messaging-nodes to view
+  connections on the Registry
+
+- Once the overlay is configured on the Registry, the the Messaging Nodes will begin to connect to their associated
+  connections. The number of outgoing connections established per node is displayed - this number can very.
 
 
 ——————STRUCTURE——————

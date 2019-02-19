@@ -16,7 +16,7 @@ public interface Protocol {
   final int DEREGISTER_REQUEST = 2;
 
   final int MESSAGING_NODE_LIST = 3;
-  
+
   final int MESSAGE = 4;
 
   final int LINK_WEIGHTS = 5;
@@ -29,8 +29,8 @@ public interface Protocol {
 
   final int TRAFFIC_SUMMARY = 9;
 
-  final byte SUCCESS = (byte) 200; 
+  final byte SUCCESS = ( byte ) 200;
 
-  final byte FAILURE = (byte) 500; 
-  
+  final byte FAILURE = ( byte ) 500;
+
 }

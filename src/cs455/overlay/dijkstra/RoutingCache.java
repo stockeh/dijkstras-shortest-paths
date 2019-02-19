@@ -34,8 +34,8 @@ public class RoutingCache {
   public RoutingCache(LinkWeights linkWeights, String self) {
     this.self = self;
     this.routes = new HashMap<>();
-    (new ShortestPath()).buildShortestPath( routes, linkWeights, self );
-    this.connections = routes.keySet().toArray( new String[routes.size()] );
+    ( new ShortestPath() ).buildShortestPath( routes, linkWeights, self );
+    this.connections = routes.keySet().toArray( new String[ routes.size() ] );
   }
 
   /**
@@ -61,7 +61,7 @@ public class RoutingCache {
    */
   public String getConnection(int index)
       throws ArrayIndexOutOfBoundsException, NullPointerException {
-    return connections[index];
+    return connections[ index ];
   }
 
   /**
@@ -90,7 +90,7 @@ public class RoutingCache {
       sb.append( current );
       for ( int i = 0; i < v.length; ++i )
       {
-        String next = v[i];
+        String next = v[ i ];
         sb.append( linkWeights.getWeight( current, next ) );
         sb.append( next );
         current = next;

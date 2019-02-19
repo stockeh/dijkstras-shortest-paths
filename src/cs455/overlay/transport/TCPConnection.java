@@ -59,8 +59,8 @@ public class TCPConnection {
    * 
    */
   public void start() {
-    (new Thread( this.receiver )).start();
-    (new Thread( this.sender  )).start();
+    ( new Thread( this.receiver ) ).start();
+    ( new Thread( this.sender ) ).start();
   }
 
   /**

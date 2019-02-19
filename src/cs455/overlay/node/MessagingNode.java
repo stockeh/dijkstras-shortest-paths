@@ -95,8 +95,8 @@ public class MessagingNode implements Node, Protocol {
       int nodePort = serverSocket.getLocalPort();
       MessagingNode node = new MessagingNode(
           InetAddress.getLocalHost().getHostName(), nodePort );
-      (new Thread( new TCPServerThread( node, serverSocket ) )).start();
-      node.registerNode( args[0], Integer.valueOf( args[1] ) );
+      ( new Thread( new TCPServerThread( node, serverSocket ) ) ).start();
+      node.registerNode( args[ 0 ], Integer.valueOf( args[ 1 ] ) );
       node.interact();
     } catch ( IOException e )
     {
@@ -152,8 +152,15 @@ public class MessagingNode implements Node, Protocol {
           break;
 
         case EXIT_OVERLAY :
-          exitOverlay();
-          running = false;
+          if ( connections.size() == 0 )
+          {
+            exitOverlay();
+            running = false;
+          } else
+          {
+            LOG.error(
+                "Network overlay is configured. Unable to leave the overlay.\n" );
+          }
           break;
 
         case HELP :
@@ -161,12 +168,16 @@ public class MessagingNode implements Node, Protocol {
               "\n\tprint-shortest-path\t: print shortest path from this node to all others.\n\n"
                   + "\texit-overlay\t\t: leave the overlay prior to starting.\n" );
           break;
+
         default :
           LOG.error(
               "Unable to process. Please enter a valid command! Input 'help' for options." );
           break;
       }
     }
+    LOG.info(
+        nodeHost + ":" + nodePort + " has deregistered and is terminating." );
+    System.exit( 0 );
   }
 
   /**
@@ -176,9 +187,6 @@ public class MessagingNode implements Node, Protocol {
    * TODO: Do I close the socket here? Current exceptions.
    */
   private void exitOverlay() {
-    LOG.debug( "HOST:PORT " + this.nodeHost + ":"
-        + Integer.toString( this.nodePort ) + " is leaving the overlay" );
-
     Register register = new Register( Protocol.DEREGISTER_REQUEST,
         this.nodeHost, this.nodePort );
 
@@ -189,7 +197,6 @@ public class MessagingNode implements Node, Protocol {
     } catch ( IOException | InterruptedException e )
     {
       LOG.error( e.getMessage() );
-      e.printStackTrace();
     }
   }
 
@@ -202,7 +209,7 @@ public class MessagingNode implements Node, Protocol {
     switch ( event.getType() )
     {
       case Protocol.REGISTER_RESPONSE :
-        System.out.println( (( RegisterResponse ) event).toString() );
+        System.out.println( ( ( RegisterResponse ) event ).toString() );
         break;
 
       case Protocol.MESSAGING_NODE_LIST :
@@ -251,7 +258,7 @@ public class MessagingNode implements Node, Protocol {
       try
       {
         socketToMessagingNode =
-            new Socket( info[0], Integer.parseInt( info[1] ) );
+            new Socket( info[ 0 ], Integer.parseInt( info[ 1 ] ) );
       } catch ( NumberFormatException | IOException e )
       {
         LOG.error( e.getMessage() );
@@ -287,7 +294,7 @@ public class MessagingNode implements Node, Protocol {
    * @param connection
    */
   private void acknowledgeNewConnection(Event event, TCPConnection connection) {
-    String nodeDetails = (( Register ) event).getConnection();
+    String nodeDetails = ( ( Register ) event ).getConnection();
     connections.put( nodeDetails, connection );
   }
 
@@ -308,7 +315,7 @@ public class MessagingNode implements Node, Protocol {
    * 
    */
   private void taskInitiate(Event event) {
-    int rounds = (( TaskInitiate ) event).getNumRounds();
+    int rounds = ( ( TaskInitiate ) event ).getNumRounds();
 
     Random random = new Random();
     for ( int i = 0; i < rounds; ++i )
@@ -321,7 +328,7 @@ public class MessagingNode implements Node, Protocol {
         sinkNode =
             routes.getConnection( random.nextInt( routes.numConnection() ) );
         routingPath = routes.getRoute( sinkNode );
-        connection = connections.get( routingPath[0] );
+        connection = connections.get( routingPath[ 0 ] );
         LOG.debug( "New Route to: " + Arrays.toString( routingPath ) );
       } catch ( ArrayIndexOutOfBoundsException | NullPointerException
           | ClassCastException e )
@@ -385,11 +392,11 @@ public class MessagingNode implements Node, Protocol {
       statistics.received( msg.getPayload() );
     } else
     {
-      TCPConnection connection = connections.get( routingPath[position] );
+      TCPConnection connection = connections.get( routingPath[ position ] );
       msg.incrementPosition();
       try
       {
-        LOG.debug( "FORWARDING to: " + routingPath[position] );
+        LOG.debug( "FORWARDING to: " + routingPath[ position ] );
         connection.getTCPSenderThread().sendData( msg.getBytes() );
         statistics.forward();
       } catch ( IOException | InterruptedException e )

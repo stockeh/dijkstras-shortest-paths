@@ -41,7 +41,7 @@ public class RegisterResponse implements Event {
     this.status = din.readByte();
 
     int len = din.readInt();
-    byte[] infoBytes = new byte[len];
+    byte[] infoBytes = new byte[ len ];
     din.readFully( infoBytes, 0, len );
 
     this.info = new String( infoBytes );

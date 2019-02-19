@@ -42,7 +42,7 @@ public class Register implements Event {
     this.type = din.readInt();
 
     int len = din.readInt();
-    byte[] ipBytes = new byte[len];
+    byte[] ipBytes = new byte[ len ];
     din.readFully( ipBytes );
 
     this.ipAddress = new String( ipBytes );
