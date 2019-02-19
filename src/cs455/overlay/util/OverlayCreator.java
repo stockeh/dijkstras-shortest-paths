@@ -52,12 +52,13 @@ public class OverlayCreator {
       throw new Exception( insufficientError
           + "The topological structure must not make a partition, let K = 2" );
     }
-    if ( (totalConnections * connectingEdges) % 2 == 1 || connectingEdges < 1 )
+    if ( ( totalConnections * connectingEdges ) % 2 == 1
+        || connectingEdges < 1 )
     {
       throw new Exception( insufficientError
-          + "The topological structure must have KN be even" );
+          + "The topological structure must have KN be even." );
     }
-    if ( totalConnections < (connectingEdges + 1) )
+    if ( totalConnections < ( connectingEdges + 1 ) )
     {
       throw new Exception( insufficientError
           + "The topological structure must satisfy N ≥ K+1" );
@@ -96,20 +97,20 @@ public class OverlayCreator {
   private OverlayNode[] buildTopology(Map<String, TCPConnection> connections,
       int connectingEdges, int totalConnections) {
 
-    String[] addresses = new String[totalConnections];
-    OverlayNode[] topology = new OverlayNode[totalConnections];
+    String[] addresses = new String[ totalConnections ];
+    OverlayNode[] topology = new OverlayNode[ totalConnections ];
 
     int index = 0;
     for ( Entry<String, TCPConnection> entry : connections.entrySet() )
     {
       String address = entry.getKey();
-      addresses[index] = address;
-      topology[index++] = new OverlayNode( entry.getValue(), address );
+      addresses[ index ] = address;
+      topology[ index++ ] = new OverlayNode( entry.getValue(), address );
     }
     // Default to creating a connecting ring between the nodes.
     for ( int node = 0; node < totalConnections; node++ )
     {
-      topology[node].add( addresses[(node + 1) % totalConnections] );
+      topology[ node ].add( addresses[ ( node + 1 ) % totalConnections ] );
     }
     joinNeighbors( addresses, topology, connectingEdges, totalConnections );
 
@@ -137,22 +138,22 @@ public class OverlayCreator {
     {
       for ( int node = 0; node < totalConnections; node++ )
       {
-        int forwardPeer = (node + spacing) % totalConnections;
-        String forwardAddress = addresses[forwardPeer];
+        int forwardPeer = ( node + spacing ) % totalConnections;
+        String forwardAddress = addresses[ forwardPeer ];
 
-        if ( !topology[node].contains( forwardAddress ) )
+        if ( !topology[ node ].contains( forwardAddress ) )
         {
-          topology[node].add( forwardAddress );
-          topology[forwardPeer].update( addresses[node] );
+          topology[ node ].add( forwardAddress );
+          topology[ forwardPeer ].update( addresses[ node ] );
         }
         int backwardPeer =
-            (node + totalConnections - spacing) % totalConnections;
-        String backwardAddress = addresses[backwardPeer];
+            ( node + totalConnections - spacing ) % totalConnections;
+        String backwardAddress = addresses[ backwardPeer ];
 
-        if ( !topology[node].contains( backwardAddress ) )
+        if ( !topology[ node ].contains( backwardAddress ) )
         {
-          topology[node].add( backwardAddress );
-          topology[backwardPeer].update( addresses[node] );
+          topology[ node ].add( backwardAddress );
+          topology[ backwardPeer ].update( addresses[ node ] );
         }
       }
       ++spacing;
@@ -174,12 +175,12 @@ public class OverlayCreator {
     int midpoint = totalConnections / 2;
     for ( int node = 0; node < totalConnections; node++ )
     {
-      int peer = (node + midpoint) % totalConnections;
-      String peerAddress = addresses[peer];
-      if ( !topology[node].contains( peerAddress ) )
+      int peer = ( node + midpoint ) % totalConnections;
+      String peerAddress = addresses[ peer ];
+      if ( !topology[ node ].contains( peerAddress ) )
       {
-        topology[node].add( peerAddress );
-        topology[peer].update( addresses[node] );
+        topology[ node ].add( peerAddress );
+        topology[ peer ].update( addresses[ node ] );
       }
     }
   }
@@ -195,12 +196,12 @@ public class OverlayCreator {
       throws IOException, InterruptedException {
     for ( int i = 0; i < topology.length; i++ )
     {
-      List<String> peers = topology[i].getPeers();
+      List<String> peers = topology[ i ].getPeers();
       int numPeers = peers.size();
 
       MessagingNodeList message = new MessagingNodeList( numPeers, peers );
       LOG.debug( message.toString() );
-      topology[i].getConnection().getTCPSenderThread()
+      topology[ i ].getConnection().getTCPSenderThread()
           .sendData( message.getBytes() );
     }
   }

@@ -49,7 +49,7 @@ public class MessagingNodeList implements Event {
     for ( int i = 0; i < this.numPeers; ++i )
     {
       int len = din.readInt();
-      byte[] bytes = new byte[len];
+      byte[] bytes = new byte[ len ];
       din.readFully( bytes );
       this.peers.add( new String( bytes ) );
     }
@@ -85,6 +85,7 @@ public class MessagingNodeList implements Event {
   public int getNumPeers() {
     return numPeers;
   }
+
   /**
    * 
    * @return The peers for this given node. May be empty or

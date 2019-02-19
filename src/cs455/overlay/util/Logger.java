@@ -43,11 +43,13 @@ public class Logger {
     try
     {
       String line = Integer.toString(
-          Thread.currentThread().getStackTrace()[3].getLineNumber() );
+          Thread.currentThread().getStackTrace()[ 3 ].getLineNumber() );
 
-      String method = Thread.currentThread().getStackTrace()[3].getMethodName();
+      String method =
+          Thread.currentThread().getStackTrace()[ 3 ].getMethodName();
 
-      String caller = Thread.currentThread().getStackTrace()[3].getClassName();
+      String caller =
+          Thread.currentThread().getStackTrace()[ 3 ].getClassName();
 
       return caller + "(" + method + ":" + line + ") ";
 

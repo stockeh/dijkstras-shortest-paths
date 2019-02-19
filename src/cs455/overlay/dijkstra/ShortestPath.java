@@ -47,12 +47,13 @@ public class ShortestPath {
     transformLinks( transformer, links );
 
     int numConnections = transformer.size();
-    graph = new int[numConnections][numConnections];
+    graph = new int[ numConnections ][ numConnections ];
     for ( String connection : links )
     {
       String[] splited = connection.split( "\\s+" );
-      addEdge( transformer.indexOf( splited[0] ),
-          transformer.indexOf( splited[1] ), Integer.parseInt( splited[2] ) );
+      addEdge( transformer.indexOf( splited[ 0 ] ),
+          transformer.indexOf( splited[ 1 ] ),
+          Integer.parseInt( splited[ 2 ] ) );
     }
     int indexOfStart = transformer.indexOf( self );
     int[] parents = dijkstra( indexOfStart );
@@ -81,13 +82,13 @@ public class ShortestPath {
     for ( String connection : links )
     {
       String[] splited = connection.split( "\\s+" );
-      if ( !transformer.contains( splited[0] ) )
+      if ( !transformer.contains( splited[ 0 ] ) )
       {
-        transformer.add( splited[0] );
+        transformer.add( splited[ 0 ] );
       }
-      if ( !transformer.contains( splited[1] ) )
+      if ( !transformer.contains( splited[ 1 ] ) )
       {
-        transformer.add( splited[1] );
+        transformer.add( splited[ 1 ] );
       }
     }
   }
@@ -102,8 +103,8 @@ public class ShortestPath {
    * @param weight
    */
   public void addEdge(int source, int destination, int weight) {
-    graph[source][destination] = weight;
-    graph[destination][source] = weight;
+    graph[ source ][ destination ] = weight;
+    graph[ destination ][ source ] = weight;
   }
 
   /**
@@ -116,26 +117,26 @@ public class ShortestPath {
    *         node.
    */
   public int[] dijkstra(int source) {
-    int numNodes = graph[0].length;
+    int numNodes = graph[ 0 ].length;
 
     // shortestDistances[i] will hold the shortest distance from src to i
-    int[] shortestDistances = new int[numNodes];
+    int[] shortestDistances = new int[ numNodes ];
 
     // added[i] will true if vertex i is included / in shortest path tree
     // or shortest distance from src to i is finalized
-    boolean[] added = new boolean[numNodes];
+    boolean[] added = new boolean[ numNodes ];
 
     for ( int index = 0; index < numNodes; index++ )
     {
-      shortestDistances[index] = Integer.MAX_VALUE;
-      added[index] = false;
+      shortestDistances[ index ] = Integer.MAX_VALUE;
+      added[ index ] = false;
     }
 
     // Store the shortest path for each node
-    int[] parents = new int[numNodes];
-    parents[source] = NO_PARENT;
+    int[] parents = new int[ numNodes ];
+    parents[ source ] = NO_PARENT;
 
-    shortestDistances[source] = 0;
+    shortestDistances[ source ] = 0;
 
     for ( int i = 1; i < numNodes; i++ )
     {
@@ -144,26 +145,26 @@ public class ShortestPath {
       int distance = Integer.MAX_VALUE;
       for ( int nodeIndex = 0; nodeIndex < numNodes; nodeIndex++ )
       {
-        if ( !added[nodeIndex] && shortestDistances[nodeIndex] < distance )
+        if ( !added[ nodeIndex ] && shortestDistances[ nodeIndex ] < distance )
         {
           nearestVertex = nodeIndex;
-          distance = shortestDistances[nodeIndex];
+          distance = shortestDistances[ nodeIndex ];
         }
       }
 
       // Mark the picked vertex as processed
-      added[nearestVertex] = true;
+      added[ nearestVertex ] = true;
 
       // Update the distances for each connected node from the nearest.
       for ( int nodeIndex = 0; nodeIndex < numNodes; nodeIndex++ )
       {
-        int edgeDistance = graph[nearestVertex][nodeIndex];
+        int edgeDistance = graph[ nearestVertex ][ nodeIndex ];
 
-        if ( edgeDistance > 0
-            && ((distance + edgeDistance) < shortestDistances[nodeIndex]) )
+        if ( edgeDistance > 0 && ( ( distance
+            + edgeDistance ) < shortestDistances[ nodeIndex ] ) )
         {
-          parents[nodeIndex] = nearestVertex;
-          shortestDistances[nodeIndex] = distance + edgeDistance;
+          parents[ nodeIndex ] = nearestVertex;
+          shortestDistances[ nodeIndex ] = distance + edgeDistance;
         }
       }
     }
@@ -192,7 +193,7 @@ public class ShortestPath {
     {
       return;
     }
-    buildPath( source, parents[current], parents, transformer, addresses );
+    buildPath( source, parents[ current ], parents, transformer, addresses );
     if ( current != source )
     {
       addresses.add( transformer.get( current ) );

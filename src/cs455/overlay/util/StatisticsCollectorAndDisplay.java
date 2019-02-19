@@ -65,7 +65,7 @@ public class StatisticsCollectorAndDisplay {
   public long getReceiveSummation() {
     return receiveSummation.get();
   }
-  
+
   /**
    * Default constructor - initialize the atomic variables with an
    * initial value of 0.

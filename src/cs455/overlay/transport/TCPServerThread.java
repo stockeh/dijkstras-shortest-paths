@@ -12,7 +12,8 @@ import cs455.overlay.util.Logger;
  * 
  * Upon a new connection being made a TCP Connection is established on
  * to send and receive messages as a response. The thread is blocked
- * on the accept statement untill these new connections are established.
+ * on the accept statement untill these new connections are
+ * established.
  * 
  * @author stock
  *
@@ -54,7 +55,7 @@ public class TCPServerThread implements Runnable {
       try
       {
         Socket incomingConnectionSocket = serverSocket.accept();
-        (new TCPConnection( node, incomingConnectionSocket )).start();
+        ( new TCPConnection( node, incomingConnectionSocket ) ).start();
       } catch ( IOException e )
       {
         LOG.error( e.getMessage() );

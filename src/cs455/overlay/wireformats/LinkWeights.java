@@ -51,7 +51,7 @@ public class LinkWeights implements Event {
     {
       this.numLinks += node.numPeers();
     }
-    this.links = new String[numLinks];
+    this.links = new String[ numLinks ];
 
     // Create all the link between each node in the overlay
     Random random = new Random();
@@ -63,8 +63,9 @@ public class LinkWeights implements Event {
     {
       for ( String peer : node.getPeers() )
       {
-        links[index++] = node.getSelf() + " " + peer + " " + Integer.toString(
-            random.ints( minWeight, (maxWeight + 1) ).findFirst().getAsInt() );
+        links[ index++ ] =
+            node.getSelf() + " " + peer + " " + Integer.toString( random
+                .ints( minWeight, ( maxWeight + 1 ) ).findFirst().getAsInt() );
       }
     }
   }
@@ -88,14 +89,14 @@ public class LinkWeights implements Event {
 
     int arrayLength = din.readInt();
 
-    this.links = new String[arrayLength];
+    this.links = new String[ arrayLength ];
 
     for ( int i = 0; i < arrayLength; ++i )
     {
       int len = din.readInt();
-      byte[] bytes = new byte[len];
+      byte[] bytes = new byte[ len ];
       din.readFully( bytes );
-      this.links[i] = (new String( bytes ));
+      this.links[ i ] = ( new String( bytes ) );
     }
 
     inputStream.close();
@@ -205,11 +206,11 @@ public class LinkWeights implements Event {
 
     for ( int i = 0; i < links.length; ++i )
     {
-      String link = links[i];
+      String link = links[ i ];
       if ( link.contains( current ) && link.contains( next ) )
       {
         // retrieve the weight for that connection and pad a leading 0
-        int weight = Integer.parseInt( link.split( "\\s+" )[2] );
+        int weight = Integer.parseInt( link.split( "\\s+" )[ 2 ] );
         sb.append( "--" );
         sb.append( String.format( "%02d", weight ) );
         sb.append( "--" );

@@ -71,14 +71,14 @@ public class Message implements Event {
 
     int arrayLength = din.readInt();
 
-    this.routingPath = new String[arrayLength];
+    this.routingPath = new String[ arrayLength ];
 
     for ( int i = 0; i < arrayLength; ++i )
     {
       int len = din.readInt();
-      byte[] bytes = new byte[len];
+      byte[] bytes = new byte[ len ];
       din.readFully( bytes );
-      this.routingPath[i] = (new String( bytes ));
+      this.routingPath[ i ] = ( new String( bytes ) );
     }
 
     inputStream.close();

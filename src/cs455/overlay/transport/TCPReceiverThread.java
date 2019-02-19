@@ -25,7 +25,7 @@ public class TCPReceiverThread implements Runnable {
    * Have the ability to log output INFO, DEBUG, ERROR configured by
    * Logger(INFO, DEBUG) and LOGGER#MASTER for ERROR settings.
    */
-  private final static Logger LOG = new Logger( true, true );
+  private final static Logger LOG = new Logger( true, false );
 
   private Socket socket;
 
@@ -66,7 +66,7 @@ public class TCPReceiverThread implements Runnable {
       {
         int len = din.readInt();
 
-        byte[] data = new byte[len];
+        byte[] data = new byte[ len ];
         din.readFully( data, 0, len );
 
         EventFactory eventFactory = EventFactory.getInstance();
@@ -75,7 +75,7 @@ public class TCPReceiverThread implements Runnable {
 
       } catch ( IOException e )
       {
-        LOG.error( "Closing connection... " + e );
+        LOG.debug( "Closing connection... " + e );
         break;
       }
     }
