@@ -186,5 +186,5 @@ results in nodes exchanging messages within the overlay.  Each node will send *R
 ### Messaging Node
 * `print-shortest-path`  
 the shortest paths that have been computed using Dijkstra’s algorithm is displayed.  The listing indicates the path from the source to every node in the overlay with the respective link weights.  
-* `exit-overlay` 
+* `exit-overlay`  
 allows a messaging node to exit the overlay.  This must occur prior to the overlay being constructed on the registry.  
