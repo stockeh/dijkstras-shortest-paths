@@ -123,7 +123,10 @@ At this point, there will be two terminals open; one dedicated to the Registry, 
 HOST=atlanta
 PORT=5001
 ```
-Add or remove desired Messaging Nodes to the application by editing the `machine_list`. Each machine should be on a new line, and can all be unique or the same.
+Add or remove desired Messaging Nodes to the application. Each machine should be on a new line and can all be unique or the same.
+```console
+vim machine_list
+```
 
 Using the terminal, execute the run script to start the Registry and Messaging Nodes. (Optional) add an argument, integer, to launch more than one instance on a given host.
 ```console
@@ -136,14 +139,9 @@ BUILD SUCCESSFUL in 0s
 BUILD SUCCESSFUL in 0s
 2 actionable tasks: 2 executed
 ```
-A new gnome-terminal, on the specified 'registry-host', will open and launch the Registry.  The following message will be shown:
 
-```console
-mars:dijkstras-shortest-paths$
-cs455.overlay.node.Registry(main:80) [INFO] - Registry starting up at: Thu Feb 14 20:04:41 MST 2019
-cs455.overlay.node.Registry(interact:102) [INFO] - Input a command to interact with processes.  Input 'help' for a list of commands.
-```
-At this point, there will be three terminals open; the original terminal, gnome-terminal for the Registry, and a gnome-terminal with tabs for each Messaging Node instance.
+At this point, there will be three terminals open; the original terminal, gnome-terminal for the Registry, and a 
+gnome-terminal with tabs for each Messaging Node instance.
 
 ## Interactions
 Upon the Messaging Nodes launching, they will auto register themselves with the Registry.  It is now possible to configure the network overlay and begin sending messages between the nodes. The Registry and each Messaging Node will have a set of commands that can be executed in the foreground process.
