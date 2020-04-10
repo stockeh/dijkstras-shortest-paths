@@ -27,36 +27,61 @@ Communications that nodes have with each other are based on TCP. Each messaging 
 Once the initialization is complete, the node will send a registration request to the Registry.
 
 ### Package Structure
-* *cs455.overlay.dijkstra*: consists of routing cache, and classes too compute the shortest paths from the overlay.
-  * RoutingCache.java
-  * ShortestPath.java
-* *cs455.overlay.node*: fundamental classes for the Messaging Node, Registry, and Node classes.
-  * MessagingNode.java
-  * Node.java
-  * Registry.java
-* *cs455.overlay.transport*: underlaying TCP structure for new connections, receiving, and sending threads.
-  * TCPConnection.java
-  * TCPReceiverThread.java
-  * TCPSenderThread.java
-  * TCPServerThread.java
-* *cs455.overlay.util*: utility classes to assist the implementation across the network / application
-  * Logger.java
-  * OverlayCreator.java
-  * OverlayNode.java
-StatisticsCollectorAndDisplay.java
-* *cs455.overlay.wireformats*: protocol defined for the various messages that are sent amongst the network.  
-  * Event.java
-  * EventFactory.java
-  * LinkWeights.java
-  * Message.java
-  * MessagingNodeList.java
-  * Protocol.java
-  * Register.java
-  * RegisterResponse.java
-  * TaskComplete.java
-  * TaskInitiate.java
-  * TaskSummaryRequest.java
-  * TaskSummaryResponse.java
+* `cs455.overlay.dijkstra`: consists of routing cache, and classes too compute the shortest paths from the overlay.
+  * `RoutingCache.java`  
+    Contains the routes for the each node that instantiates this class to avoid recomputing routes. In order to get the routing cache for a node, the link weights need to be supplied to each of the nodes in the overlay. From here, the shortest bath can be built.
+  * `ShortestPath.java`  
+    Compute the shortest path given the link weights to all other connections. This class will transform the link weights to a two-dimensional graph where representing each connection as an index and the weights as bidirectional values.
+* `cs455.overlay.node`: fundamental classes for the Messaging Node, Registry, and Node classes.
+  * `MessagingNode.java`  
+    Messaging nodes initiate and accept both communications and messages within the system.
+  * `Node.java`  
+    Interface for the MessagingNode and Registry, so underlying communication is indistinguishable, i.e., Nodes send messages to Nodes.
+  * `Registry.java`  
+    Maintains information about the registered messaging nodes. The registry is the brain of the network overlay. It is in charge of registering / deregistering messaging nodes, setting up the overlay, sending schematics to the nodes, and starting the process of message sending. There will only be one instance of the registry in the network - this is tied to a specific port number upon startup.
+* `cs455.overlay.transport`: underlaying TCP structure for new connections, receiving, and sending threads.
+  * `TCPConnection.java`  
+    This class is used to establish a connection by starting a new TCPSenderThread and TCPReceiverThread.
+  * `TCPReceiverThread.java`  
+    The TCP Receiving Thread to acknowledge new wireformat messages received on the specified connection. The thread is blocked waiting to read an integer (the protocol for each message). This ensures the thread is not running unless there is something to be read.
+  * `TCPSenderThread.java`
+    Class used to send data, via byte array to the receiver. Running as a thread, the TCPConnection holds an instance to the sender for new messages. This makes use of a linked blocking queue to buffer the rate at which messages are being sent.
+  * `TCPServerThread.java`  
+  	A new TCP Server Thread is setup on the Registry and each new Messaging Node to accept new connections. Upon a new connection being made a TCP Connection is established on to send and receive messages as a response. The thread is blocked on the accept statement untill these new connections are established.
+* `cs455.overlay.util`: utility classes to assist the implementation across the network / application
+  * `Logger.java`  
+    Custom Logger class used to print info, debug, and error logs to the console. Calling location is displayed.
+  * `OverlayCreator.java`  
+    The network topology and connections are established for the overlay. Each messaging node will get an event alluding to the topology connections and link weights between said connections.
+  * `OverlayNode.java`  
+    Class to maintain a nodes properties while constructing the topology for the networks overlay.
+  * `StatisticsCollectorAndDisplay.java`  
+    Holds the information that pertains to tracking communications between nodes.
+* `cs455.overlay.wireformats`: protocol defined for the various messages that are sent amongst the network.  
+  * `Event.java`  
+    Public interface that each message will implement.
+  * `EventFactory.java`  
+    Singleton class in charge of creating objects, i.e., messaging types, from reading the first byte of a message.
+  * `LinkWeights.java`  
+  	Defines the weights between connections for the network overlay. In order to create the links between networks, it is expected that the topology is created before creating an instance of this class. This is done by registering new messaging nodes with the registry and invoking the {@link OverlayCreator} class via the command line at the registry.
+  * `Message.java`  
+  	A message that will be passed between nodes from a source to a sink.
+  * `MessagingNodeList.java`  
+    Messaging Node List wireformat type is used to provide a peer-list to the connected nodes for setting up the overlay.
+  * `Protocol.java`  
+    Interface defining the wireformats between messaging nodes and the registry.
+  * `Register.java`  
+    Register message type to initialize itself with another node. This is a reusable class for registering, and deregistering messaging nodes with the registry. As well as connecting messaging nodes to other messaging nodes to construct the overlay.
+  * `RegisterResponse.java`  
+    Register Response message type to respond to message node with the status and information from the registry.
+  * `TaskComplete.java`  
+  	Upon completion of sending messages, a node will inform the registry of its task being complete.
+  * `TaskInitiate.java`  
+    The registry informs nodes in the overlay when they should start sending messages to each other. It does so via the TaskInitiate control message.
+  * `TaskSummaryRequest.java`  
+    Upon receipt of all task complete messages to the registry a request for the task summary is delivered to each node in the system.
+  * `TaskSummaryResponse.java`  
+    Response to the registry node of task statistics. This message is delivered up receiving a TaskSummaryRequest.
 
 ## Statistics  
 Messages are sent between randomly chosen nodes for *R* rounds containing a specific payload.  Specifically, each packet will contain:  
@@ -118,12 +143,15 @@ cs455.overlay.node.MessagingNode(interact:141) [INFO] - Input a command to inter
 At this point, there will be two terminals open; one dedicated to the Registry, and another with tabs corresponding to each Messaging Node Instance. 
 
 ### Linux
-(Optional) modify the 'registry-host' and 'registry-port' of the Registry. 
+(Optional) modify the 'registry-host' and 'registry-port' of the Registry within the run script.
 ```console
 HOST=atlanta
 PORT=5001
 ```
-Add or remove desired Messaging Nodes to the application by editing the `machine_list`. Each machine should be on a new line, and can all be unique or the same.
+Add or remove desired Messaging Nodes to the application. Each machine should be on a new line and can all be unique or the same.
+```console
+vim machine_list
+```
 
 Using the terminal, execute the run script to start the Registry and Messaging Nodes. (Optional) add an argument, integer, to launch more than one instance on a given host.
 ```console
@@ -136,25 +164,27 @@ BUILD SUCCESSFUL in 0s
 BUILD SUCCESSFUL in 0s
 2 actionable tasks: 2 executed
 ```
-A new gnome-terminal, on the specified 'registry-host', will open and launch the Registry.  The following message will be shown:
 
-```console
-mars:dijkstras-shortest-paths$
-cs455.overlay.node.Registry(main:80) [INFO] - Registry starting up at: Thu Feb 14 20:04:41 MST 2019
-cs455.overlay.node.Registry(interact:102) [INFO] - Input a command to interact with processes.  Input 'help' for a list of commands.
-```
-At this point, there will be three terminals open; the original terminal, gnome-terminal for the Registry, and a gnome-terminal with tabs for each Messaging Node instance.
+At this point, there will be three terminals open; the original terminal, gnome-terminal for the Registry, and a 
+gnome-terminal with tabs for each Messaging Node instance.
 
 ## Interactions
 Upon the Messaging Nodes launching, they will auto register themselves with the Registry.  It is now possible to configure the network overlay and begin sending messages between the nodes. The Registry and each Messaging Node will have a set of commands that can be executed in the foreground process.
 
 ### Registry
-* *list-messaging-nodes*: this results in information about the messaging nodes (hostname, and port-number) being displayed.  
-* *list-weights*: information about the links comprising the overlay are displayed, each representing a bidirectional connection and the weight for that link.  
-* *setup-overlay k*: results in the registry setting up the overlay to produce a *k*-regular graph of order *N*, where *k* defines the number of bidirectional connections a node will have.  Ensuring that the topology created produces no partitions.  
-* *send-overlay-link-weights*: a message is sent to all the registered nodes in the overlay with information about each connection and their link weights.  This allows all the nodes in the system to be aware of not just its immediate neighbors, but the complete set of links and nodes.  
-* *start R*: results in nodes exchanging messages within the overlay.  Each node will send *R* rounds of messages to randomly chosen nodes (excluding itself).  The packet format is specified in the statistics section of this description.
+* `list-messaging-nodes`  
+     this results in information about the messaging nodes (hostname, and port-number) being displayed.  
+* `list-weights`  
+     information about the links comprising the overlay are displayed, each representing a bidirectional connection and the weight for that link.  
+* `setup-overlay k`  
+results in the registry setting up the overlay to produce a *k*-regular graph of order *N*, where *k* defines the number of bidirectional connections a node will have.  Ensuring that the topology created produces no partitions.  
+* `send-overlay-link-weights`  
+a message is sent to all the registered nodes in the overlay with information about each connection and their link weights.  This allows all the nodes in the system to be aware of not just its immediate neighbors, but the complete set of links and nodes.  
+* `start R`  
+results in nodes exchanging messages within the overlay.  Each node will send *R* rounds of messages to randomly chosen nodes (excluding itself).  The packet format is specified in the statistics section of this description.
 
 ### Messaging Node
-* *print-shortest-path*: the shortest paths that have been computed using Dijkstra’s algorithm is displayed.  The listing indicates the path from the source to every node in the overlay with the respective link weights.  
-* *exit-overlay*: allows a messaging node to exit the overlay.  This must occur prior to the overlay being constructed on the registry.  
+* `print-shortest-path`  
+the shortest paths that have been computed using Dijkstra’s algorithm is displayed.  The listing indicates the path from the source to every node in the overlay with the respective link weights.  
+* `exit-overlay`  
+allows a messaging node to exit the overlay.  This must occur prior to the overlay being constructed on the registry.  
